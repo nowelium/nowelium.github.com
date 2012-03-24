@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[ハタさんのブログ(出張版)]]></title>
-  <link href="http://nowelium.github.com/atom.xml" rel="self"/>
+  <title><![CDATA[Category: octopress | ハタさんのブログ(出張版)]]></title>
+  <link href="http://nowelium.github.com/blog/categories/octopress/atom.xml" rel="self"/>
   <link href="http://nowelium.github.com/"/>
   <updated>2012-03-24T20:11:31+09:00</updated>
   <id>http://nowelium.github.com/</id>
