@@ -1,15 +1,23 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
-        <loc>http://nowelium.github.com/blog/2012/03/24/title/</loc>
-        <lastmod>2012-03-24T20:11:20+09:00</lastmod>
+        <loc>http://nowelium.github.com/blog/2012/03/24/title.html</loc>
+        <lastmod>2012-03-24T21:41:33+09:00</lastmod>
+    </url>
+    <url>
+        <loc>http://nowelium.github.com/blog/2012/03/26/new-post.html</loc>
+        <lastmod>2012-03-26T23:15:17+09:00</lastmod>
+    </url>
+    <url>
+        <loc>http://nowelium.github.com/blog/2012/03/26/octopress-diff.html</loc>
+        <lastmod>2012-03-26T23:41:10+09:00</lastmod>
     </url>
     <url>
         <loc>http://nowelium.github.com/blog/archives/</loc>
-        <lastmod>2012-03-24T20:11:20+09:00</lastmod>
+        <lastmod>2012-03-26T23:41:10+09:00</lastmod>
     </url>
     <url>
         <loc>http://nowelium.github.com/</loc>
-        <lastmod>2012-03-24T20:11:20+09:00</lastmod>
+        <lastmod>2012-03-26T23:41:10+09:00</lastmod>
     </url>
 </urlset>
