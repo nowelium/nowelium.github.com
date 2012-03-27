@@ -4,7 +4,7 @@
   <title><![CDATA[ハタさんのブログ(出張版)]]></title>
   <link href="http://nowelium.github.com/atom.xml" rel="self"/>
   <link href="http://nowelium.github.com/"/>
-  <updated>2012-03-27T14:39:56+09:00</updated>
+  <updated>2012-03-27T15:10:46+09:00</updated>
   <id>http://nowelium.github.com/</id>
   <author>
     <name><![CDATA[Yusuke Hata]]></name>
@@ -12,6 +12,123 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[My First Perl #2]]></title>
+    <link href="http://nowelium.github.com/blog/2012/03/27/my-first-perl-2.html"/>
+    <updated>2012-03-27T15:00:00+09:00</updated>
+    <id>http://nowelium.github.com/blog/2012/03/27/my-first-perl-2</id>
+    <content type="html"><![CDATA[<h2>前回の続き</h2>
+
+<p>for 文がダサいとか言いながら、配列の初期化にこんなのを使ってた。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">my</span> <span class="nv">@list</span> <span class="o">=</span> <span class="p">();</span>
+</span><span class='line'><span class="k">for</span><span class="p">(</span><span class="k">my</span> <span class="nv">$i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nv">$i</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">;</span> <span class="o">++</span><span class="nv">$i</span><span class="p">){</span>
+</span><span class='line'>  <span class="nb">push</span> <span class="nv">@list</span><span class="p">,</span> <span class="nv">$i</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これは、perl の範囲演算子で何とかなった。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">@list</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span> <span class="o">..</span> <span class="mi">100</span><span class="p">);</span>
+</span><span class='line'><span class="k">print</span> <span class="nv">$_</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span> <span class="k">for</span> <span class="nv">@list</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ということで、fizzbuzz 書き直し</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">@list</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span> <span class="o">..</span> <span class="mi">100</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">@fizzbuzz</span> <span class="o">=</span> <span class="nb">map</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span><span class="p">(</span><span class="mi">0</span> <span class="o">==</span> <span class="p">(</span><span class="nv">$_</span> <span class="nv">%</span> <span class="nv">3</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="mi">0</span> <span class="o">==</span> <span class="p">(</span><span class="nv">$_</span> <span class="nv">%</span> <span class="nv">5</span><span class="p">)){</span>
+</span><span class='line'>    <span class="s">&quot;FizzBuzz&quot;</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">elsif</span> <span class="p">(</span><span class="mi">0</span> <span class="o">==</span> <span class="p">(</span><span class="nv">$_</span> <span class="nv">%</span> <span class="nv">3</span><span class="p">)){</span>
+</span><span class='line'>    <span class="s">&quot;Fizz&quot;</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">elsif</span> <span class="p">(</span><span class="mi">0</span> <span class="o">==</span> <span class="p">(</span><span class="nv">$_</span> <span class="nv">%</span> <span class="nv">5</span><span class="p">)){</span>
+</span><span class='line'>    <span class="s">&quot;Buzz&quot;</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nv">$_</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span> <span class="nv">@list</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">print</span> <span class="nv">$_</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span> <span class="k">for</span> <span class="nv">@fizzbuzz</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ということは、更に短くできそう</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">print</span> <span class="nv">$_</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span> <span class="k">for</span> <span class="nb">map</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span><span class="p">(</span><span class="mi">0</span> <span class="o">==</span> <span class="p">(</span><span class="nv">$_</span> <span class="nv">%</span> <span class="nv">3</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="mi">0</span> <span class="o">==</span> <span class="p">(</span><span class="nv">$_</span> <span class="nv">%</span> <span class="nv">5</span><span class="p">)){</span>
+</span><span class='line'>    <span class="s">&quot;FizzBuzz&quot;</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">elsif</span> <span class="p">(</span><span class="mi">0</span> <span class="o">==</span> <span class="p">(</span><span class="nv">$_</span> <span class="nv">%</span> <span class="nv">3</span><span class="p">)){</span>
+</span><span class='line'>    <span class="s">&quot;Fizz&quot;</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">elsif</span> <span class="p">(</span><span class="mi">0</span> <span class="o">==</span> <span class="p">(</span><span class="nv">$_</span> <span class="nv">%</span> <span class="nv">5</span><span class="p">)){</span>
+</span><span class='line'>    <span class="s">&quot;Buzz&quot;</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nv">$_</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span> <span class="p">(</span><span class="mi">0</span> <span class="o">..</span> <span class="mi">100</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>おお。<br/>
+後置 for で map が扱えるとか。ちゃんとした言語だ。<br/>
+ということで、変数が <code>$_</code> だけになったのが良くなってきた感じ。</p>
+
+<p><strong><em>FizzBuzz</em></strong> はこのくらにして、次へ</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[my first perl #1]]></title>
@@ -104,7 +221,7 @@ Internet, point your browser at http://www.perl.org/, the Perl Home Page.
 
 
 <p>うむ。正解かどうかわからん。<br/>
-文法が php がパクったらしいので、phpでも描いてみた。</p>
+phpの文法は perl からパクったらしいので、古く慣れ親しんだ php でも描いてみた。</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
