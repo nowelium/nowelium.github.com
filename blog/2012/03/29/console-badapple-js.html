@@ -97,6 +97,117 @@
 <p>まず、元の動画をBitmapイメージシーケンスに変換するのが面倒だった。
 <a href="http://www.squared5.com/">MPEG Streamclip</a> っていうソフトに行き着くまでが大変だった。。。<br/>
 こんな感じで白黒なBitmapの連続データに変換してます。</p>
+
+<p><img src="http://nowelium.github.com/images/s2012-03-30.02.07.png" width="400" height="300"></p>
+
+<p>んで、ここから連続したBitmap画像データができたので</p>
+
+<p><img src="http://nowelium.github.com/images/s2012-03-30.19.35.png" width="400" height="300"></p>
+
+<p>このBitmapたちをjavascriptで読めるように <a href="https://github.com/nowelium/node-bitmap">nowelium/node-bitmap</a> を作った。</p>
+
+<p>Bitmapの読み取りは <a href="http://www.kk.iij4u.or.jp/~kondo/bmp/">bmp ファイルフォーマット</a> と <a href="http://ja.wikipedia.org/wiki/Windows_bitmap">Windows bitmap - Wikipedia</a> を参考にしてます。<br/>
+Bitmapって画像データだけの塊だと思ってたら、ちゃんとした仕様があったんだね。。</p>
+
+<p>今回の動画で使ってる実際のコードはgistに貼ってます。</p>
+
+<div><script src='https://gist.github.com/2221106.js?file='></script>
+<noscript><pre><code>var fs = require('fs');
+var util = require('util');
+var async = require('async');
+
+var Bitmap = require('./bitmap');
+
+//
+// ニコニコ動画の【東方】Bad Apple!!　ＰＶ【影絵】 &lt;http://www.nicovideo.jp/watch/sm8628149&gt;
+// を 30fps な bitmap に分割したので、
+// それを読み込みつつ、コンソールに表示してみる。
+//
+// async &lt;https://github.com/caolan/async&gt;
+// を使ってるので、 npm install async する
+//
+// youtubeにモッサリ動画を上げてみた。&lt;http://youtu.be/IALA76KSc4I&gt;
+// 音付きにしてニコニコ動画に上げてみた。&lt;http://www.nicovideo.jp/watch/sm17397285&gt;
+//
+var imageSequenceDir = 'badapple_30fps_160_120';
+fs.readdir(__dirname + '/' + imageSequenceDir, function(err, files){
+  if(err){
+    throw err;
+  }
+
+  var pathes = files.map(function(file){
+    return __dirname + '/' + imageSequenceDir + '/' + file;
+  }).filter(function(path){
+    if(/\.bmp$/.test(path)){
+      return true;
+    }
+    return false;
+  });
+
+  // コンソールに出すときに半角スペースと#の文字列に変換
+  Bitmap.prototype.mapRGBA = function(r, g, b){
+    if(255 == r &amp;&amp; 255 == g &amp;&amp; 255 == b){
+      return '  ';
+    }
+    return '##';
+  };
+
+  var render = async.queue(function(view, next){
+    util.print('\033[2J');
+    util.print(view);
+    util.print('\033[0;0H');
+    return next(null);
+  }, 1);
+
+  var queue = async.queue(function(path, next){
+    return fs.readFile(path, next);
+  }, 8);
+
+  var serial = [];
+  queue.push(pathes, function(err, buffer){
+    if(err){
+      throw err;
+    }
+
+    var bitmap = new Bitmap(buffer);
+    bitmap.init();
+    if(!bitmap.isBitmap()){
+      throw new Error('not bitmap');
+    }
+
+    serial.push(function(next){
+      var values = bitmap.getData();
+
+      var view = values.map(function(line){
+        return line.join('');
+      });
+      return render.push(view.join('\n'), function(){
+        return setTimeout(next, 22);
+      });
+    });  
+  });
+  queue.drain = function(){
+    async.series(serial, function(err, results){
+      if(err){
+        console.error(err);
+        return process.exit(1);
+      }
+
+      console.log('\033[2J'); // clear screen
+      return process.exit(0);
+    });
+  };
+});</code></pre></noscript></div>
+
+
+<p>話は戻るけど、本家の <a href="http://www.nicovideo.jp/watch/sm8628149">【東方】Bad Apple!!　ＰＶ【影絵】</a> の派生動画が色々面白くて</p>
+
+<p>僕が今回これをつくろうと思うきっかけになった、<a href="http://www.nicovideo.jp/watch/sm11328052">Japanino(arduino互換機)でBad Appleしてたり</a>、 <a href="http://www.nicovideo.jp/watch/sm13130024">USBモニタに出してたり</a>、 <a href="http://www.nicovideo.jp/watch/sm17154423">minecraftでやってたり</a>とまぁ色々挑戦するのが面白い動画になってます。</p>
+
+<p>そして、僕がBitmapと格闘している間、世の中はPNGでWebsocketsまでやっていたのだった。。。<br/>
+<a href="http://d.hatena.ne.jp/scalar/20120320/1332217029">WebSocket で PNG 画像をバイナリ転送して、JavaScript で展開して表示してみた</a><br/>
+僕の実装の方はコンソールで動画が見れるよ！っていう誰得なものだから実用性が欲しい。。
+ここまで実装できたし、次はsocket.ioにでも乗っけてみると面白そうだ。</p>
 </div>
 
   <footer>
