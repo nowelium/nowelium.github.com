@@ -9,7 +9,18 @@
 <title>ハタさんのブログ(出張版)</title>
 <meta name="author" content="Yusuke Hata">
 <meta name="description"
-      content="Node.jsでコンソールにBad Apple!!を出力してみた Mar 29th, 2012 【東方】Bad Apple!!　ＰＶ【影絵】 というニコニコ動画で人気の動画があるんだけど、これをコンソールに出してみよう。と思ってやってみた。 【ニコニコ動画】コンソールでBad Apple!! &hellip;">
+      content="My First Perl #3 Mar 30th, 2012 ということ(?)で、関数とクラスあたりのステップに行こうと思う 関数 関数は sub を使う。と
+しかも sub が sub たる理由はサブルーチン。なるほど。 1
+2
+3
+4
+5
+6
+7
+8
+9
+use strict;
+use &hellip;">
 
 
 <!-- http://t.co/dKP3o1e -->
@@ -85,6 +96,164 @@
   <div id="top">
 
   
+  
+  
+    <article class="hentry" role="article">
+      
+  <header>
+    
+      <h1 class="entry-title">My First Perl #3</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-03-30T19:43:00+09:00" pubdate data-updated="true">Mar 30<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>ということ(?)で、関数とクラスあたりのステップに行こうと思う</p>
+
+<h1>関数</h1>
+
+<p>関数は sub を使う。と<br/>
+しかも sub が sub たる理由はサブルーチン。なるほど。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">hoge</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$arg1</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">print</span> <span class="nv">$arg1</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">hoge</span><span class="p">(</span><span class="s">&#39;hello world&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>shift に引数はないけど、引数を先頭から取得するときに使うらしい。<br/>
+少し謎。<br/>
+<strong><em>どうやら <code>shift</code> の引数なしは <code>shift @_</code> と同義らしい <a href="http://d.hatena.ne.jp/perlcodesample/20101130/1298764341">http://d.hatena.ne.jp/perlcodesample/20101130/1298764341</a></em></strong></p>
+
+<p>もう少し引数を受け取りましょう。<br/>
+構造体Hashとか</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#my %hoge = (a =&gt; 1, b =&gt; 2);</span>
+</span><span class='line'><span class="c1"># HashをHashとして出力するときは %hash なのね。。</span>
+</span><span class='line'><span class="c1">#print %hoge . &quot;\n&quot;;</span>
+</span><span class='line'><span class="c1"># でもkeyの値を出すときは $hash なのね。。</span>
+</span><span class='line'><span class="c1">#print $hoge{a} . &quot;\n&quot;;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">foo</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$value_1</span> <span class="o">=</span> <span class="nv">$_</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+</span><span class='line'>  <span class="k">print</span> <span class="nv">$value_1</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1"># ==&gt; a と出る</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$value_2</span> <span class="o">=</span> <span class="nb">ref</span> <span class="nv">$_</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+</span><span class='line'>  <span class="k">print</span> <span class="nv">$value_2</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1"># ==&gt; 何もでない</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$value_3</span> <span class="o">=</span> <span class="nb">ref</span> <span class="p">{</span><span class="nv">@_</span><span class="p">};</span>
+</span><span class='line'>  <span class="k">print</span> <span class="nv">$value_3</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1"># ==&gt; Hash と出る...ということはこれでHashを受け取れたハズ。</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">#print $value_3{a} . &quot;\n&quot;;</span>
+</span><span class='line'>  <span class="c1"># ==&gt; &#39;Global symbol &quot;%value_3&quot; requires explicit package&#39; えええええ！</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">#my %value_4 = ref {@_};</span>
+</span><span class='line'>  <span class="c1">#print $value_4{a} . &quot;\n&quot;;</span>
+</span><span class='line'>  <span class="c1"># ==&gt; &#39;Odd number of elements in hash assignment&#39; えええええええええ！！</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># 素直に。。</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">%value_5</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">print</span> <span class="nv">$value_5</span><span class="p">{</span><span class="n">a</span><span class="p">}</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">print</span> <span class="nv">$value_5</span><span class="p">{</span><span class="n">b</span><span class="p">}</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">foo</span><span class="p">((</span><span class="n">a</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">b</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">));</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>最初に <a href="http://d.hatena.ne.jp/perlcodesample/20101130/1298764341">http://d.hatena.ne.jp/perlcodesample/20101130/1298764341</a> を読んだのがマズかったか。。。<br/>
+やっぱりサンプルコードがあるほうがいいよね。<br/>
+というっことで、 $value_(1..4) あでは、上記の記事をナナメ読みして頑張った結果。<br/>
+$value_5 というフツーな方法で大丈夫だと知ったのは <a href="http://d.hatena.ne.jp/perlcodesample/20080605/1212675666">http://d.hatena.ne.jp/perlcodesample/20080605/1212675666</a> の記事を読んでから。。</p>
+
+<p><strong><em>正直 $value_3{a} と $value_4{a} がエラーになる理由が全然少しもわからん</em></strong><br/>
+構文から学ぶべきだった。。。</p>
+
+<p>perl って、%だったり $とか @とか タイヘンです。。</p>
+
+<p>今回は sub 、もといサブルーチンに衝撃を受けたので、次回にでもクラスをやろう。。</p>
+</div>
+  
+  <footer style="text-align: right">
+    <a rel="full-article" href="/blog/2012/03/30/my-first-perl-3.html">permalink</a>
+  </footer>
+
+
+    </article>
   
   
     <article class="hentry" role="article">
@@ -1147,11 +1316,15 @@ else区を書きたくない派(あるのか?)の一員としては、単純な�
 </section>
 <section>
   <h2>Tags</h2>
-  <span id="tag-cloud"><a href='/blog/categories/bitmap' style='font-size: 130.0%'>Bitmap(1)</a> <a href='/blog/categories/hello-world' style='font-size: 130.0%'>Hello world(1)</a> <a href='/blog/categories/nodejs' style='font-size: 130.0%'>Nodejs(1)</a> <a href='/blog/categories/octopress' style='font-size: 160.0%'>Octopress(2)</a> <a href='/blog/categories/perl' style='font-size: 160.0%'>Perl(2)</a> </span>
+  <span id="tag-cloud"><a href='/blog/categories/bitmap' style='font-size: 120.0%'>Bitmap(1)</a> <a href='/blog/categories/hello-world' style='font-size: 120.0%'>Hello world(1)</a> <a href='/blog/categories/javascript' style='font-size: 120.0%'>Javascript(1)</a> <a href='/blog/categories/nodejs' style='font-size: 120.0%'>Nodejs(1)</a> <a href='/blog/categories/octopress' style='font-size: 140.0%'>Octopress(2)</a> <a href='/blog/categories/perl' style='font-size: 160.0%'>Perl(3)</a> </span>
 </section>
 <section>
   <h2>Recent Posts</h2>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/03/30/my-first-perl-3.html">My First Perl #3</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2012/03/29/console-badapple-js.html">Node.jsでコンソールにBad Apple!!を出力してみた</a>
@@ -1162,7 +1335,7 @@ else区を書きたくない派(あるのか?)の一員としては、単純な�
       </li>
     
       <li class="post">
-        <a href="/blog/2012/03/27/my-first-perl-1.html">my first perl #1</a>
+        <a href="/blog/2012/03/27/my-first-perl-1.html">My First Perl #1</a>
       </li>
     
       <li class="post">
