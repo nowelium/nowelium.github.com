@@ -9,18 +9,9 @@
 <title>ハタさんのブログ(出張版)</title>
 <meta name="author" content="Yusuke Hata">
 <meta name="description"
-      content="My First Perl #3 Mar 30th, 2012 ということ(?)で、関数とクラスあたりのステップに行こうと思う 関数 関数は sub を使う。と
-しかも sub が sub たる理由はサブルーチン。なるほど。 1
-2
-3
-4
-5
-6
-7
-8
-9
-use strict;
-use &hellip;">
+      content="My First Perl #4 Apr 1st, 2012 クラス編 ということで、クラス。
+Classで重要なのはやっぱり継承パターンと多態性でしょう。
+アクセサはどうなってるのか、パッケージとかも含め、それくらいできると夢が広がりングな気がする 参考にはいつもの オブジェクト指向 / &hellip;">
 
 
 <!-- http://t.co/dKP3o1e -->
@@ -96,6 +87,612 @@ use &hellip;">
   <div id="top">
 
   
+  
+  
+    <article class="hentry" role="article">
+      
+  <header>
+    
+      <h1 class="entry-title">My First Perl #4</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-04-01T21:15:00+09:00" pubdate data-updated="true">Apr 1<span>st</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h1>クラス編</h1>
+
+<p>ということで、クラス。<br/>
+Classで重要なのはやっぱり継承パターンと多態性でしょう。<br/>
+アクセサはどうなってるのか、パッケージとかも含め、それくらいできると夢が広がりングな気がする</p>
+
+<p>参考にはいつもの <a href="http://d.hatena.ne.jp/perlcodesample/20100513/1276960096">オブジェクト指向 / Perl逆引き事典 - サンプルコードによるPerl入門</a> を 見てます。</p>
+
+<h2>クラス作成</h2>
+
+<p>package が使えるそうな。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">package</span> <span class="n">Hoge</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">new</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$proto</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$self</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nb">bless</span> <span class="nv">$self</span><span class="p">,</span> <span class="nv">$proto</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$hoge</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">hoge</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$hoge</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nv">$self</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">$hoge</span> <span class="o">=</span> <span class="n">Hoge</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">(</span><span class="s">&#39;hello world&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="k">print</span> <span class="nv">$hoge</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">hoge</span><span class="p">}</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>コンストラクタの定義から、プロパティの設定と取得はこうやるのね。<br/>
+元のページ → <a href="http://d.hatena.ne.jp/perlcodesample/20090320/1237130107">汎用的なコンストラクタの雛形 - サンプルコードによるPerl入門</a> には init メソッドが必要とのことだったけど、今回は無視<br/>
+どうやら、new のコンストラクタには <code>[Class(prototype), arg1, arg2..]</code> といった形式で渡されているようですね<br/>
+bless がよくわからないけど、js でいうところの Function.prototype.bind 的なものだろうか、第一引数に prototype を割り当てる的な(それだとapplyの方が近そうだけど)</p>
+
+<h2>プロパティ作成</h2>
+
+<p>もう少し、プロパティ<br/>
+参考元を参考に、引数を色々受け取ってみる</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">package</span> <span class="n">Hoge</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">new</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$proto</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$self</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nb">bless</span> <span class="nv">$self</span><span class="p">,</span> <span class="nv">$proto</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">(</span><span class="nv">@_</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nv">$self</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">init</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="p">(</span><span class="nv">$self</span><span class="p">,</span> <span class="p">(</span><span class="nv">$hoge</span><span class="p">,</span> <span class="nv">$foo</span><span class="p">,</span> <span class="nv">$bar</span><span class="p">))</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">hoge</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$hoge</span><span class="p">;</span>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">foo</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$foo</span><span class="p">;</span>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">bar</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$bar</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">$hoge</span> <span class="o">=</span> <span class="n">Hoge</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">,</span> <span class="s">&#39;world&#39;</span><span class="p">,</span> <span class="s">&#39;perl #4&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="c1"># print $hoge-&gt;hoge . &#39;:&#39; . $hoge-&gt;foo . &#39;:&#39; . $hoge-&gt;bar . &quot;\n&quot;;</span>
+</span><span class='line'><span class="c1">## =&gt; Can&#39;t locate object method &quot;hoge&quot; via package &quot;Hoge&quot;</span>
+</span><span class='line'><span class="k">print</span> <span class="nv">$hoge</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">hoge</span><span class="p">}</span> <span class="o">.</span> <span class="s">&#39;:&#39;</span> <span class="o">.</span> <span class="nv">$hoge</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">foo</span><span class="p">}</span> <span class="o">.</span> <span class="s">&#39;:&#39;</span> <span class="o">.</span> <span class="nv">$hoge</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">bar</span><span class="p">}</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>なるほど、<code>$self-&gt;{verialble}</code> で設定したものは、<code>$self-&gt;variable</code>で取り出せないのね(Hashだから?)。当たり前といえば当たり前だった。<br/>
+それ以外は意外とフツーな感じ</p>
+
+<h2>メソッド作成</h2>
+
+<p>プロパティまでは作成できたので、次はメソッド。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">package</span> <span class="n">Hoge</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">new</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$proto</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$self</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nb">bless</span> <span class="nv">$self</span><span class="p">,</span> <span class="nv">$proto</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">(</span><span class="nv">@_</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nv">$self</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">init</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="p">(</span><span class="nv">$self</span><span class="p">,</span> <span class="p">(</span><span class="nv">$hoge</span><span class="p">,</span> <span class="nv">$foo</span><span class="p">,</span> <span class="nv">$bar</span><span class="p">))</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">hoge</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$hoge</span><span class="p">;</span>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">foo</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$foo</span><span class="p">;</span>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">bar</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$bar</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">greeting</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$self</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">print</span> <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">hoge</span><span class="p">}</span> <span class="o">.</span> <span class="s">&#39;:&#39;</span> <span class="o">.</span> <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">foo</span><span class="p">}</span> <span class="o">.</span> <span class="s">&#39;:&#39;</span> <span class="o">.</span> <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">bar</span><span class="p">}</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">$hoge</span> <span class="o">=</span> <span class="n">Hoge</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">,</span> <span class="s">&#39;world&#39;</span><span class="p">,</span> <span class="s">&#39;perl #4&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="nv">$hoge</span><span class="o">-&gt;</span><span class="n">greeting</span><span class="p">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>先ほどの property で出力してたのを メソッドで。<br/>
+第一引数に <code>self(自分自身)</code> が入ってるとか、python ぽい</p>
+
+<h3>メソッド引数</h3>
+
+<p>メソッドのプロパティはどうなってるのか。<br/>
+たぶん、<code>#init</code> で試したから同じだと思うけど。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">package</span> <span class="n">Hoge</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">new</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$proto</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$self</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nb">bless</span> <span class="nv">$self</span><span class="p">,</span> <span class="nv">$proto</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">(</span><span class="nv">@_</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nv">$self</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">init</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="p">(</span><span class="nv">$self</span><span class="p">,</span> <span class="p">(</span><span class="nv">$hoge</span><span class="p">,</span> <span class="nv">$foo</span><span class="p">,</span> <span class="nv">$bar</span><span class="p">))</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">hoge</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$hoge</span><span class="p">;</span>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">foo</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$foo</span><span class="p">;</span>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">bar</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$bar</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">greeting</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$self</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">my</span> <span class="p">(</span><span class="nv">$arg1</span><span class="p">,</span> <span class="nv">$arg2</span><span class="p">,</span> <span class="nv">$arg3</span><span class="p">)</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">print</span> <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">hoge</span><span class="p">}</span> <span class="o">.</span> <span class="s">&#39;:&#39;</span> <span class="o">.</span> <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">foo</span><span class="p">}</span> <span class="o">.</span> <span class="s">&#39;:&#39;</span> <span class="o">.</span> <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">bar</span><span class="p">}</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">print</span> <span class="nv">$arg1</span> <span class="o">.</span> <span class="s">&#39;,&#39;</span> <span class="o">.</span> <span class="nv">$arg2</span> <span class="o">.</span> <span class="s">&#39;,&#39;</span> <span class="o">.</span> <span class="nv">$arg3</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">$hoge</span> <span class="o">=</span> <span class="n">Hoge</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">,</span> <span class="s">&#39;world&#39;</span><span class="p">,</span> <span class="s">&#39;perl #4&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="nv">$hoge</span><span class="o">-&gt;</span><span class="n">greeting</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ふむ。<br/>
+shift は <code>@_</code> から一つ shift して、 <code>@_</code> 自体は <code>(a, b) = @_</code> とかのリスト構文的なので、値をまとめて代入できる。と</p>
+
+<h2>継承</h2>
+
+<p>クラスの継承。なんかちょっと特殊だった</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">package</span> <span class="n">Hoge</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">new</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$proto</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$self</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nb">bless</span> <span class="nv">$self</span><span class="p">,</span> <span class="nv">$proto</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">(</span><span class="nv">@_</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nv">$self</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">init</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="p">(</span><span class="nv">$self</span><span class="p">,</span> <span class="p">(</span><span class="nv">$hoge</span><span class="p">,</span> <span class="nv">$foo</span><span class="p">,</span> <span class="nv">$bar</span><span class="p">))</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">hoge</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$hoge</span><span class="p">;</span>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">foo</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$foo</span><span class="p">;</span>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">bar</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$bar</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">greeting</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$self</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">my</span> <span class="p">(</span><span class="nv">$arg1</span><span class="p">,</span> <span class="nv">$arg2</span><span class="p">,</span> <span class="nv">$arg3</span><span class="p">)</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">print</span> <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">hoge</span><span class="p">}</span> <span class="o">.</span> <span class="s">&#39;:&#39;</span> <span class="o">.</span> <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">foo</span><span class="p">}</span> <span class="o">.</span> <span class="s">&#39;:&#39;</span> <span class="o">.</span> <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">bar</span><span class="p">}</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">print</span> <span class="nv">$arg1</span> <span class="o">.</span> <span class="s">&#39;,&#39;</span> <span class="o">.</span> <span class="nv">$arg2</span> <span class="o">.</span> <span class="s">&#39;,&#39;</span> <span class="o">.</span> <span class="nv">$arg3</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">package</span> <span class="n">Foo</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">base</span><span class="p">(</span><span class="s">&#39;Hoge&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">new</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$proto</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$self</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nb">bless</span> <span class="nv">$self</span><span class="p">,</span> <span class="nv">$proto</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">(</span><span class="nv">@_</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nv">$self</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">greeting</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$self</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">print</span> <span class="s">&#39;Im Foo#&#39;</span> <span class="o">.</span> <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">hoge</span><span class="p">}</span> <span class="o">.</span> <span class="s">&#39;,&#39;</span> <span class="o">.</span> <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">foo</span><span class="p">}</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">$foo</span> <span class="o">=</span> <span class="n">Foo</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">,</span> <span class="s">&#39;world&#39;</span><span class="p">,</span> <span class="s">&#39;perl #4&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="nv">$foo</span><span class="o">-&gt;</span><span class="n">greeting</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>まず、</p>
+
+<ul>
+<li><code>@ISA</code> はよくわからなかったので、<code>use base</code>による継承を使った。</li>
+<li><code>super</code> を指定しないでも上位メソッドはコンストラクタから呼べた</li>
+<li><code>new</code> のコンストラクタには、上位クラスの参照はなかった</li>
+<li>override 記述をしなくても、自動的に override だった。</li>
+<li>上位プロパティは特に指定なしに呼び出せた。</li>
+</ul>
+
+
+<p>これ、use で複数とか指定するとどうなっちゃうんだろ。差分継承だったらいいな。(それはいつかやる)</p>
+
+<h3>overrideしたメソッドから上位メソッドの呼び出し</h3>
+
+<p>疑問に思ったのでこれをやってみる<br/>
+この方法は、<a href="http://d.hatena.ne.jp/BigFatCat/20071215/1197701541">ここから</a> 参照。<br/>
+ちなみに、やらんとしてることは、javascript だとこんな感じ</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">Hoge</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="nx">a</span> <span class="o">=</span> <span class="nx">a</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="nx">b</span> <span class="o">=</span> <span class="nx">b</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'><span class="nx">Hoge</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">greeting</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(){</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Im Hoge: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">a</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">b</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Foo</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(){</span>
+</span><span class='line'>  <span class="nx">Hoge</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'><span class="nx">Foo</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">greeting</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">bar</span><span class="p">){</span>
+</span><span class='line'>  <span class="nx">Hoge</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">greeting</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;bar value =&gt; &#39;</span> <span class="o">+</span> <span class="nx">bar</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">foo</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Foo</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="s1">&#39;world&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="nx">foo</span><span class="p">.</span><span class="nx">greeting</span><span class="p">(</span><span class="s1">&#39;**bar value**&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ということで、perl</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">package</span> <span class="n">Hoge</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">new</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$proto</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$self</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nb">bless</span> <span class="nv">$self</span><span class="p">,</span> <span class="nv">$proto</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">(</span><span class="nv">@_</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nv">$self</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">init</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="p">(</span><span class="nv">$self</span><span class="p">,</span> <span class="p">(</span><span class="nv">$hoge</span><span class="p">,</span> <span class="nv">$foo</span><span class="p">,</span> <span class="nv">$bar</span><span class="p">))</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">hoge</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$hoge</span><span class="p">;</span>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">foo</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$foo</span><span class="p">;</span>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">bar</span><span class="p">}</span> <span class="o">=</span> <span class="nv">$bar</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">greeting</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$self</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">my</span> <span class="p">(</span><span class="nv">$arg1</span><span class="p">,</span> <span class="nv">$arg2</span><span class="p">,</span> <span class="nv">$arg3</span><span class="p">)</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">print</span> <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">hoge</span><span class="p">}</span> <span class="o">.</span> <span class="s">&#39;:&#39;</span> <span class="o">.</span> <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">foo</span><span class="p">}</span> <span class="o">.</span> <span class="s">&#39;:&#39;</span> <span class="o">.</span> <span class="nv">$self</span><span class="o">-&gt;</span><span class="p">{</span><span class="n">bar</span><span class="p">}</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">print</span> <span class="nv">$arg1</span> <span class="o">.</span> <span class="s">&#39;,&#39;</span> <span class="o">.</span> <span class="nv">$arg2</span> <span class="o">.</span> <span class="s">&#39;,&#39;</span> <span class="o">.</span> <span class="nv">$arg3</span> <span class="o">.</span> <span class="s">&quot;\n&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">package</span> <span class="n">Foo</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">base</span><span class="p">(</span><span class="s">&#39;Hoge&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">new</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$proto</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$self</span> <span class="o">=</span> <span class="p">{};</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nb">bless</span> <span class="nv">$self</span><span class="p">,</span> <span class="nv">$proto</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">(</span><span class="nv">@_</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nv">$self</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">greeting</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$self</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">$self</span><span class="o">-&gt;</span><span class="nn">SUPER::</span><span class="n">greeting</span><span class="p">(</span><span class="s">&#39;Im&#39;</span><span class="p">,</span> <span class="s">&#39;Foo&#39;</span><span class="p">,</span> <span class="s">&#39;#greeting&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">$foo</span> <span class="o">=</span> <span class="n">Foo</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">(</span><span class="s">&#39;hello&#39;</span><span class="p">,</span> <span class="s">&#39;world&#39;</span><span class="p">,</span> <span class="s">&#39;perl #4&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="nv">$foo</span><span class="o">-&gt;</span><span class="n">greeting</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>なるほど。<code>$self-&gt;SUPER::#method</code> で上位メソッド(というか親インスタンスのメソッドの呼び出し)ができるようになるのね。<br/>
+これは使い道が広がるわ。</p>
+
+<h1>次回</h1>
+
+<p>アクセサを見てみたいところだけど、やっぱここで触れなかった package あたり。
+どうやって分割してんのかと。</p>
+</div>
+  
+  <footer style="text-align: right">
+    <a rel="full-article" href="/blog/2012/04/01/my-first-perl-4.html">permalink</a>
+  </footer>
+
+
+    </article>
   
   
     <article class="hentry" role="article">
@@ -1316,11 +1913,15 @@ else区を書きたくない派(あるのか?)の一員としては、単純な�
 </section>
 <section>
   <h2>Tags</h2>
-  <span id="tag-cloud"><a href='/blog/categories/bitmap' style='font-size: 120.0%'>Bitmap(1)</a> <a href='/blog/categories/hello-world' style='font-size: 120.0%'>Hello world(1)</a> <a href='/blog/categories/javascript' style='font-size: 120.0%'>Javascript(1)</a> <a href='/blog/categories/nodejs' style='font-size: 120.0%'>Nodejs(1)</a> <a href='/blog/categories/octopress' style='font-size: 140.0%'>Octopress(2)</a> <a href='/blog/categories/perl' style='font-size: 160.0%'>Perl(3)</a> </span>
+  <span id="tag-cloud"><a href='/blog/categories/bitmap' style='font-size: 115.0%'>Bitmap(1)</a> <a href='/blog/categories/hello-world' style='font-size: 115.0%'>Hello world(1)</a> <a href='/blog/categories/javascript' style='font-size: 130.0%'>Javascript(2)</a> <a href='/blog/categories/nodejs' style='font-size: 115.0%'>Nodejs(1)</a> <a href='/blog/categories/octopress' style='font-size: 130.0%'>Octopress(2)</a> <a href='/blog/categories/perl' style='font-size: 160.0%'>Perl(4)</a> </span>
 </section>
 <section>
   <h2>Recent Posts</h2>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/04/01/my-first-perl-4.html">My First Perl #4</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2012/03/30/my-first-perl-3.html">My First Perl #3</a>
