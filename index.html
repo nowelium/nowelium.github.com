@@ -9,9 +9,9 @@
 <title>ハタさんのブログ(出張版)</title>
 <meta name="author" content="Yusuke Hata">
 <meta name="description"
-      content="My First Perl #4 Apr 1st, 2012 クラス編 ということで、クラス。
-Classで重要なのはやっぱり継承パターンと多態性でしょう。
-アクセサはどうなってるのか、パッケージとかも含め、それくらいできると夢が広がりングな気がする 参考にはいつもの オブジェクト指向 / &hellip;">
+      content="My First Perl#5 Apr 22nd, 2012 さて、期間があいてしまいました。
+クラス系をやっていたけど、少し脱線して、関数プログラミング的なものを少しやってました。
+理解を深めるために、今回もjavascriptのコードを含めます。 高階関数 perlでも高階関数( &hellip;">
 
 
 <!-- http://t.co/dKP3o1e -->
@@ -87,6 +87,295 @@ Classで重要なのはやっぱり継承パターンと多態性でしょう。
   <div id="top">
 
   
+  
+  
+    <article class="hentry" role="article">
+      
+  <header>
+    
+      <h1 class="entry-title">My First Perl#5</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-04-22T22:09:00+09:00" pubdate data-updated="true">Apr 22<span>nd</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>さて、期間があいてしまいました。<br/>
+クラス系をやっていたけど、少し脱線して、関数プログラミング的なものを少しやってました。<br/>
+理解を深めるために、今回もjavascriptのコードを含めます。</p>
+
+<h2>高階関数</h2>
+
+<p>perlでも高階関数(関数を引数に受け取れる関数)を扱えるらしい。<br/>
+記述としてはこんな感じ</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">hoge</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="p">(</span><span class="nv">$foo</span><span class="p">,</span> <span class="nv">$a</span><span class="p">,</span> <span class="nv">$b</span><span class="p">)</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="o">&amp;</span><span class="nv">$foo</span><span class="p">(</span><span class="nv">$a</span><span class="p">,</span> <span class="nv">$b</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">print</span> <span class="n">hoge</span><span class="p">(</span><span class="k">sub </span><span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="p">(</span><span class="nv">$x</span><span class="p">,</span> <span class="nv">$y</span><span class="p">)</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nv">$x</span> <span class="o">+</span> <span class="nv">$y</span><span class="p">;</span>
+</span><span class='line'><span class="p">},</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これは javascript に置き換えるとこんな感じになる</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="kd">var</span> <span class="nx">hoge</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">foo</span><span class="p">,</span> <span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">){</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">foo</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">hoge</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">){</span>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">x</span> <span class="o">+</span> <span class="nx">y</span><span class="p">;</span>
+</span><span class='line'><span class="p">},</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">));</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>幾分(というか、かなり)の部分で javascript の方が可読性が高いけど、<br/>
+関数hogeは、第一引数に高階関数と引数a, b受け取る関数になる、<br/>
+高階関数の実装は、与えられた引数x, yを加算するだけ、というシンプルなもの</p>
+
+<p>perl のコードだと、&amp;$foo となっているけど、$foo に入っているコードや文字列の実行に当たるらしい。<br/>
+これに関しては以下になる</p>
+
+<h3>変数に与えられた関数の実行</h3>
+
+<p>変数に割り当てられた変数の実行は、こんな感じでできるらしい(ただし、&#8221;strict refs&#8221;になる)</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">sub </span><span class="nf">hoge</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$arg1</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">print</span> <span class="s">&quot;arg1 =&gt; $arg1 \n&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">$variable</span> <span class="o">=</span> <span class="s">&quot;hoge&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="o">&amp;</span><span class="p">{</span><span class="nv">$variable</span><span class="p">}(</span><span class="s">&quot;hello world&quot;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これにより、変数$variableに割り当てられた値の実行は &amp;$variable で行うらしい</p>
+
+<h2>カリー化</h2>
+
+<p>高階関数ができるなら、やっぱり使えて欲しいカリー化(currying)<br/>
+カレーじゃない方で</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">currying</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="p">(</span><span class="nv">$target</span><span class="p">,</span> <span class="nv">$arg1</span><span class="p">,</span> <span class="nv">$arg2</span><span class="p">)</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="k">sub </span><span class="p">{</span>
+</span><span class='line'>    <span class="k">my</span> <span class="nv">$arg3</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="o">&amp;</span><span class="nv">$target</span><span class="p">(</span><span class="nv">$arg1</span><span class="p">,</span> <span class="nv">$arg2</span><span class="p">,</span> <span class="nv">$arg3</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">$calc</span> <span class="o">=</span> <span class="k">sub </span><span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="p">(</span><span class="nv">$a</span><span class="p">,</span> <span class="nv">$b</span><span class="p">,</span> <span class="nv">$c</span><span class="p">)</span> <span class="o">=</span> <span class="nv">@_</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="p">(</span><span class="nv">$a</span> <span class="o">+</span> <span class="nv">$b</span><span class="p">)</span> <span class="o">*</span> <span class="nv">$c</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">$c1</span> <span class="o">=</span> <span class="n">currying</span><span class="p">(</span><span class="nv">$calc</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class='line'><span class="k">print</span> <span class="o">&amp;</span><span class="nv">$c1</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span> <span class="c1"># ==&gt; 9</span>
+</span><span class='line'><span class="k">print</span> <span class="o">&amp;</span><span class="nv">$c1</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span> <span class="c1"># ==&gt; 12</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">$c2</span> <span class="o">=</span> <span class="n">currying</span><span class="p">(</span><span class="nv">$calc</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+</span><span class='line'><span class="k">print</span> <span class="o">&amp;</span><span class="nv">$c2</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span> <span class="c1"># ==&gt; 21</span>
+</span><span class='line'><span class="k">print</span> <span class="o">&amp;</span><span class="nv">$c2</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span> <span class="c1"># ==&gt; 28</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>関数を返却されたことがわかっていれば、&amp;$variable() で関数を実行できるらしい<br/>
+これにより、引数束縛(curry)ができると。<br/>
+少し、&amp;$var が気持ち悪いけど。</p>
+
+<p>これまた、js で書きなおすとこんな感じ</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="kd">var</span> <span class="nx">currying</span>  <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">target</span><span class="p">,</span> <span class="nx">arg1</span><span class="p">,</span> <span class="nx">arg2</span><span class="p">){</span>
+</span><span class='line'>  <span class="k">return</span> <span class="kd">function</span><span class="p">(</span><span class="nx">arg3</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">target</span><span class="p">(</span><span class="nx">arg1</span><span class="p">,</span> <span class="nx">arg2</span><span class="p">,</span> <span class="nx">arg3</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">calc</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">,</span> <span class="nx">c</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">return</span> <span class="p">(</span><span class="nx">a</span> <span class="o">+</span> <span class="nx">b</span><span class="p">)</span> <span class="o">*</span> <span class="nx">c</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">c1</span> <span class="o">=</span> <span class="nx">currying</span><span class="p">(</span><span class="nx">calc</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">c1</span><span class="p">(</span><span class="mi">3</span><span class="p">));</span> <span class="c1">// ==&gt; 9</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">c1</span><span class="p">(</span><span class="mi">4</span><span class="p">));</span> <span class="c1">// ==&gt; 12</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">c2</span> <span class="o">=</span> <span class="nx">currying</span><span class="p">(</span><span class="nx">calc</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">c2</span><span class="p">(</span><span class="mi">3</span><span class="p">));</span> <span class="c1">// ==&gt; 21</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">c2</span><span class="p">(</span><span class="mi">4</span><span class="p">));</span> <span class="c1">// ==&gt; 28</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>クロージャの生成</h2>
+
+<p>少し戻り、クロージャの生成とその実行<br/>
+高階関数ができるなら、やっぱり使えて欲しいクロージャ<br/>
+やってみた。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='perl'><span class='line'><span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+</span><span class='line'><span class="k">use</span> <span class="n">warnings</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">sub </span><span class="nf">closure</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">my</span> <span class="nv">$counter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="k">sub </span><span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nv">$counter</span><span class="o">++</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">$c1</span> <span class="o">=</span> <span class="n">closure</span><span class="p">();</span>
+</span><span class='line'><span class="k">print</span> <span class="o">&amp;</span><span class="nv">$c1</span><span class="p">();</span> <span class="c1"># ==&gt; 0</span>
+</span><span class='line'><span class="k">print</span> <span class="o">&amp;</span><span class="nv">$c1</span><span class="p">();</span> <span class="c1"># ==&gt; 1</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">my</span> <span class="nv">$c2</span> <span class="o">=</span> <span class="n">closure</span><span class="p">();</span>
+</span><span class='line'><span class="k">print</span> <span class="o">&amp;</span><span class="nv">$c2</span><span class="p">();</span> <span class="c1"># ==&gt; 0</span>
+</span><span class='line'><span class="k">print</span> <span class="o">&amp;</span><span class="nv">$c2</span><span class="p">();</span> <span class="c1"># ==&gt; 1</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># c1 </span>
+</span><span class='line'><span class="k">print</span> <span class="o">&amp;</span><span class="nv">$c1</span><span class="p">();</span> <span class="c1"># ==&gt; 2</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>かなり素直に実行できます。</p>
+
+<h1>今回はここまで</h1>
+
+<p>次回は、リファクタリングで使える ::can とか使って<br/>
+パッケージ単位で関数プログラミングです。</p>
+
+<p>人はそれをメタプログラミングというらしいけど、関数言語だと結構頻繁に使えて便利なので<br/>
+次回はそこにハマった人の内容になる。かも。</p>
+</div>
+  
+  <footer style="text-align: right">
+    <a rel="full-article" href="/blog/2012/04/22/my-first-perl-5.html">permalink</a>
+  </footer>
+
+
+    </article>
   
   
     <article class="hentry" role="article">
@@ -1913,11 +2202,15 @@ else区を書きたくない派(あるのか?)の一員としては、単純な�
 </section>
 <section>
   <h2>Tags</h2>
-  <span id="tag-cloud"><a href='/blog/categories/bitmap' style='font-size: 115.0%'>Bitmap(1)</a> <a href='/blog/categories/hello-world' style='font-size: 115.0%'>Hello world(1)</a> <a href='/blog/categories/javascript' style='font-size: 130.0%'>Javascript(2)</a> <a href='/blog/categories/nodejs' style='font-size: 115.0%'>Nodejs(1)</a> <a href='/blog/categories/octopress' style='font-size: 130.0%'>Octopress(2)</a> <a href='/blog/categories/perl' style='font-size: 160.0%'>Perl(4)</a> </span>
+  <span id="tag-cloud"><a href='/blog/categories/bitmap' style='font-size: 112.0%'>Bitmap(1)</a> <a href='/blog/categories/hello-world' style='font-size: 112.0%'>Hello world(1)</a> <a href='/blog/categories/javascript' style='font-size: 136.0%'>Javascript(3)</a> <a href='/blog/categories/nodejs' style='font-size: 112.0%'>Nodejs(1)</a> <a href='/blog/categories/octopress' style='font-size: 124.0%'>Octopress(2)</a> <a href='/blog/categories/perl' style='font-size: 160.0%'>Perl(5)</a> </span>
 </section>
 <section>
   <h2>Recent Posts</h2>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/04/22/my-first-perl-5.html">My First Perl#5</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2012/04/01/my-first-perl-4.html">My First Perl #4</a>
