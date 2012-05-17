@@ -9,9 +9,9 @@
 <title>ハタさんのブログ(出張版)</title>
 <meta name="author" content="Yusuke Hata">
 <meta name="description"
-      content="My First Perl#5 Apr 22nd, 2012 さて、期間があいてしまいました。
-クラス系をやっていたけど、少し脱線して、関数プログラミング的なものを少しやってました。
-理解を深めるために、今回もjavascriptのコードを含めます。 高階関数 perlでも高階関数( &hellip;">
+      content="Io-lang-assignment May 18th, 2012 今日は気分転換に io の話題でも
+io-lang には3種類くらいの assignment statement(というか expressionかな)があるんだけど、
+どれも使い方がよくわからん、と最初につまづくことかと思います &hellip;">
 
 
 <!-- http://t.co/dKP3o1e -->
@@ -87,6 +87,189 @@
   <div id="top">
 
   
+  
+  
+    <article class="hentry" role="article">
+      
+  <header>
+    
+      <h1 class="entry-title">Io-lang-assignment</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-05-18T00:51:00+09:00" pubdate data-updated="true">May 18<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>今日は気分転換に io の話題でも<br/>
+io-lang には3種類くらいの assignment statement(というか expressionかな)があるんだけど、<br/>
+どれも使い方がよくわからん、と最初につまづくことかと思います。</p>
+
+<p>代入式としては、以下の3つです</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">hoge</span> <span class="o">:=</span> <span class="s">&quot;set value&quot;</span>
+</span><span class='line'><span class="n">hoge</span> <span class="o">=</span> <span class="s">&quot;update value&quot;</span>
+</span><span class='line'><span class="n">hoge</span> <span class="o">::=</span> <span class="s">&quot;new value&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>と、これらはそれぞれ、以下のように動作します</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">Lobby</span> <span class="n">setSlot</span><span class="o">(</span><span class="s">&quot;hoge&quot;</span><span class="o">,</span> <span class="s">&quot;set slot&quot;</span><span class="o">)</span>
+</span><span class='line'><span class="n">hoge</span> <span class="n">println</span> <span class="c1">// =&gt; &quot;set slot&quot;</span>
+</span><span class='line'><span class="n">Lobby</span> <span class="n">updateSlot</span><span class="o">(</span><span class="s">&quot;hoge&quot;</span><span class="o">,</span> <span class="s">&quot;update value&quot;</span><span class="o">)</span>
+</span><span class='line'><span class="n">hoge</span> <span class="n">println</span> <span class="c1">// =&gt; &quot;update value&quot;</span>
+</span><span class='line'><span class="n">Lobby</span> <span class="n">newSlot</span><span class="o">(</span><span class="s">&quot;hoge&quot;</span><span class="o">,</span> <span class="s">&quot;new value&quot;</span><span class="o">)</span>
+</span><span class='line'><span class="n">hoge</span> <span class="n">println</span> <span class="c1">// =&gt; &quot;new value&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>んで、<code>::=</code> である、newSlot は setter を生成してくれるメソッドになります。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">hoge</span> <span class="o">:=</span> <span class="n">Object</span> <span class="k">clone</span>
+</span><span class='line'><span class="n">hoge</span> <span class="n">foo</span> <span class="o">::=</span> <span class="mf">123</span>
+</span><span class='line'><span class="n">hoge</span> <span class="n">setFoo</span><span class="o">(</span><span class="mf">456</span><span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>こんな感じ。<br/>
+今回は、この <code>::=</code> の動作まわりではなく、<code>:=</code> と <code>=</code> についての話題です。<br/>
+まずは、下記のコードをみてください</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">x</span> <span class="o">:=</span> <span class="mf">10</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">hoge</span> <span class="o">:=</span> <span class="k">method</span><span class="o">(</span>
+</span><span class='line'>  <span class="n">x</span> <span class="o">=</span> <span class="mf">123</span>
+</span><span class='line'>  <span class="o">(</span><span class="s">&quot;hoge x is &quot;</span> <span class="o">..</span> <span class="n">x</span><span class="o">)</span> <span class="n">println</span>
+</span><span class='line'><span class="o">)</span>
+</span><span class='line'><span class="n">foo</span> <span class="o">:=</span> <span class="k">method</span><span class="o">(</span>
+</span><span class='line'>  <span class="n">x</span> <span class="o">:=</span> <span class="mf">456</span>
+</span><span class='line'>  <span class="o">(</span><span class="s">&quot;foo x is &quot;</span> <span class="o">..</span> <span class="n">x</span><span class="o">)</span> <span class="n">println</span>
+</span><span class='line'><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">hoge</span>
+</span><span class='line'><span class="o">(</span><span class="s">&quot;1) x is &quot;</span> <span class="o">..</span> <span class="n">x</span><span class="o">)</span> <span class="n">println</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">foo</span>
+</span><span class='line'><span class="o">(</span><span class="s">&quot;2) x is &quot;</span> <span class="o">..</span> <span class="n">x</span><span class="o">)</span> <span class="n">println</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これの結果はどうなるでしょうか。<br/>
+すべての x の出力は hoge メソッドで設定された 123 になるでしょうか。<br/>
+それともスコープ上 一番上にある 10 のままになるでしょうか。</p>
+
+<p>結果はこんな感じになります</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">hoge</span> <span class="n">x</span> <span class="n">is</span> <span class="mf">123</span>
+</span><span class='line'><span class="mf">1</span><span class="o">)</span> <span class="n">x</span> <span class="n">is</span> <span class="mf">123</span>
+</span><span class='line'><span class="n">foo</span> <span class="n">x</span> <span class="n">is</span> <span class="mf">456</span>
+</span><span class='line'><span class="mf">2</span><span class="o">)</span> <span class="n">x</span> <span class="n">is</span> <span class="mf">123</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>なんと、hoge メソッドで上書きした(updateSlot)値は foo メソッドで上書きされていない(setSlot)のです<br/>
+少し不思議な動きな感じもします。</p>
+
+<p>ただ、これも javascript で考えると案外フツーなことだったりします。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">hoge</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(){</span>
+</span><span class='line'>  <span class="nx">x</span> <span class="o">=</span> <span class="mi">123</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;hoge x is &quot;</span> <span class="o">+</span> <span class="nx">x</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">foo</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="mi">456</span><span class="p">;</span>
+</span><span class='line'>  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;foo x is &quot;</span> <span class="o">+</span> <span class="nx">x</span><span class="p">);</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">hoge</span><span class="p">();</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;1) x is &quot;</span> <span class="o">+</span> <span class="nx">x</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">foo</span><span class="p">();</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;2) x is &quot;</span> <span class="o">+</span> <span class="nx">x</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>このjsのコードもioの結果と同じになります。</p>
+
+<p>なんとなく、ioでもレキシカルスコープみたいのがあるんだなーと思うと夢が広がりングですね。
+ちなみに、この話題は最近投稿された↓のトピックから参照してます。<br/>
+<a href="http://tech.groups.yahoo.com/group/iolanguage/message/13177">iolanguage : Message: Re: [Io] Assignment Operators</a></p>
+
+<p>その内、どこかで block と interpolate などについても話題にしたいところ。</p>
+</div>
+  
+  <footer style="text-align: right">
+    <a rel="full-article" href="/blog/2012/05/18/io-lang-assignment.html">permalink</a>
+  </footer>
+
+
+    </article>
   
   
     <article class="hentry" role="article">
@@ -2202,11 +2385,15 @@ else区を書きたくない派(あるのか?)の一員としては、単純な�
 </section>
 <section>
   <h2>Tags</h2>
-  <span id="tag-cloud"><a href='/blog/categories/bitmap' style='font-size: 112.0%'>Bitmap(1)</a> <a href='/blog/categories/hello-world' style='font-size: 112.0%'>Hello world(1)</a> <a href='/blog/categories/javascript' style='font-size: 136.0%'>Javascript(3)</a> <a href='/blog/categories/nodejs' style='font-size: 112.0%'>Nodejs(1)</a> <a href='/blog/categories/octopress' style='font-size: 124.0%'>Octopress(2)</a> <a href='/blog/categories/perl' style='font-size: 160.0%'>Perl(5)</a> </span>
+  <span id="tag-cloud"><a href='/blog/categories/bitmap' style='font-size: 112.0%'>Bitmap(1)</a> <a href='/blog/categories/hello-world' style='font-size: 112.0%'>Hello world(1)</a> <a href='/blog/categories/io' style='font-size: 112.0%'>Io(1)</a> <a href='/blog/categories/javascript' style='font-size: 148.0%'>Javascript(4)</a> <a href='/blog/categories/nodejs' style='font-size: 112.0%'>Nodejs(1)</a> <a href='/blog/categories/octopress' style='font-size: 124.0%'>Octopress(2)</a> <a href='/blog/categories/perl' style='font-size: 160.0%'>Perl(5)</a> </span>
 </section>
 <section>
   <h2>Recent Posts</h2>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/05/18/io-lang-assignment.html">io-lang-assignment</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2012/04/22/my-first-perl-5.html">My First Perl#5</a>
