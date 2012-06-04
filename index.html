@@ -9,9 +9,13 @@
 <title>ハタさんのブログ(出張版)</title>
 <meta name="author" content="Yusuke Hata">
 <meta name="description"
-      content="Io Language Assignment Code May 18th, 2012 今日は気分転換に io の話題でも
-io-lang には3種類くらいの assignment statement(というか expressionかな)があるんだけど、
-どれも使い方がよくわからん、 &hellip;">
+      content="Io-lang-scope-1 Jun 5th, 2012 今回は jsxについて ではなく、iolanguage の block と scope まわりについて少し javascript の closure ってとても可読性が高くて、よくあるサンプルならこんな感じ 1
+2
+3
+4
+5
+6
+7 &hellip;">
 
 
 <!-- http://t.co/dKP3o1e -->
@@ -87,6 +91,151 @@ io-lang には3種類くらいの assignment statement(というか expression�
   <div id="top">
 
   
+  
+  
+    <article class="hentry" role="article">
+      
+  <header>
+    
+      <h1 class="entry-title">Io-lang-scope-1</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-06-05T00:10:00+09:00" pubdate data-updated="true">Jun 5<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>今回は <del>jsxについて</del> ではなく、iolanguage の block と scope まわりについて少し</p>
+
+<p>javascript の closure ってとても可読性が高くて、よくあるサンプルならこんな感じ</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="kd">var</span> <span class="nx">createCounter</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">return</span> <span class="kd">function</span> <span class="p">(){</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">count</span><span class="o">++</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nx">createCounter</span><span class="p">();</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">a</span><span class="p">());</span> <span class="c1">// =&gt; 0</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">a</span><span class="p">());</span> <span class="c1">// =&gt; 1</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">b</span> <span class="o">=</span> <span class="nx">createCounter</span><span class="p">();</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">b</span><span class="p">());</span> <span class="c1">// =&gt; 0</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">b</span><span class="p">());</span> <span class="c1">// =&gt; 1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>んで、これを io でやろうとする場合、そのままやるならこんな実装になる</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">createCounter</span> <span class="o">:=</span> <span class="k">method</span> <span class="o">(</span>
+</span><span class='line'>  <span class="n">count</span> <span class="o">:=</span> <span class="mf">0</span><span class="o">;</span>
+</span><span class='line'>  <span class="n">block</span> <span class="o">(</span> <span class="n">count</span> <span class="o">=</span> <span class="n">count</span> <span class="o">+</span> <span class="mf">1</span> <span class="o">)</span>
+</span><span class='line'><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">a</span> <span class="o">:=</span> <span class="n">createCounter</span>
+</span><span class='line'><span class="n">a</span> <span class="n">call</span> <span class="n">println</span> <span class="o">=&gt;</span> <span class="mf">1</span>
+</span><span class='line'><span class="n">a</span> <span class="n">call</span> <span class="n">println</span> <span class="o">=&gt;</span> <span class="mf">2</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>と、method や block が入り組んだ、とても気持ち悪いコードになってしまう。<br/>
+ただ、これはなんてことはない、javascriptのブロックがfunctionになっているから、綺麗なコードに見えるだけだ！(とかいう)<br/>
+ちなみに、このコードを下記のように method だけにすると、スコープの参照が出来なくなってしまう</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">createCounter</span> <span class="o">:=</span> <span class="k">method</span> <span class="o">(</span>
+</span><span class='line'>  <span class="n">count</span> <span class="o">:=</span> <span class="mf">0</span><span class="o">;</span>
+</span><span class='line'>  <span class="k">method</span> <span class="o">(</span> <span class="n">count</span> <span class="o">=</span> <span class="n">count</span> <span class="o">+</span> <span class="mf">1</span> <span class="o">)</span>
+</span><span class='line'><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">b</span> <span class="o">:=</span> <span class="n">createCounter</span>
+</span><span class='line'><span class="n">b</span> <span class="n">println</span> <span class="o">=&gt;</span> <span class="n">Exception</span><span class="err">:</span> <span class="n">Object</span> <span class="n">does</span> <span class="n">not</span> <span class="n">respond</span> <span class="n">to</span> <span class="err">&#39;</span><span class="n">count</span><span class="err">&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>つまり、<code>method</code> は内包的なブロックを参照できないけど <code>block</code> は参照できる。と<br/>
+んで、これを使うと <code>interpolate</code> がひと味違ってくる</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">a</span> <span class="o">:=</span> <span class="n">block</span><span class="o">(</span><span class="n">a</span><span class="o">,</span> <span class="n">b</span><span class="o">,</span> <span class="n">c</span><span class="o">,</span>
+</span><span class='line'>  <span class="s">&quot;hello #{a} #{b + c}&quot;</span> <span class="n">interpolate</span>
+</span><span class='line'><span class="o">)</span>
+</span><span class='line'><span class="n">a</span> <span class="n">call</span><span class="o">(</span><span class="s">&quot;hello world&quot;</span><span class="o">,</span> <span class="mf">1</span><span class="o">,</span> <span class="mf">2</span><span class="o">)</span> <span class="c1">// =&gt; hello hello world 3</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>interpolate</code> は通常こんな使い方になってしまうんだけど、block はスコープを参照してるのがいいね</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">obj</span> <span class="o">:=</span> <span class="n">Object</span> <span class="k">clone</span>
+</span><span class='line'><span class="n">obj</span> <span class="n">a</span> <span class="o">:=</span> <span class="s">&quot;hello world&quot;</span>
+</span><span class='line'><span class="n">obj</span> <span class="n">b</span> <span class="o">:=</span> <span class="mf">1</span>
+</span><span class='line'><span class="n">obj</span> <span class="n">c</span> <span class="o">:=</span> <span class="mf">2</span>
+</span><span class='line'><span class="s">&quot;hello #{a} #{b + c}&quot;</span> <span class="n">interpolate</span><span class="o">(</span><span class="n">obj</span><span class="o">)</span> <span class="c1">// hello hello world 3</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>さて、何を書こうと思ってたか忘れてしまった。。。<br/>
+<code>block</code> とかその辺りは次回へ続く。。。</p>
+</div>
+  
+  <footer style="text-align: right">
+    <a rel="full-article" href="/blog/2012/06/05/io-lang-scope-1.html">permalink</a>
+  </footer>
+
+
+    </article>
   
   
     <article class="hentry" role="article">
@@ -2385,11 +2534,15 @@ else区を書きたくない派(あるのか?)の一員としては、単純な�
 </section>
 <section>
   <h2>Tags</h2>
-  <span id="tag-cloud"><a href='/blog/categories/bitmap' style='font-size: 112.0%'>Bitmap(1)</a> <a href='/blog/categories/hello-world' style='font-size: 112.0%'>Hello world(1)</a> <a href='/blog/categories/io' style='font-size: 112.0%'>Io(1)</a> <a href='/blog/categories/javascript' style='font-size: 148.0%'>Javascript(4)</a> <a href='/blog/categories/nodejs' style='font-size: 112.0%'>Nodejs(1)</a> <a href='/blog/categories/octopress' style='font-size: 124.0%'>Octopress(2)</a> <a href='/blog/categories/perl' style='font-size: 160.0%'>Perl(5)</a> </span>
+  <span id="tag-cloud"><a href='/blog/categories/bitmap' style='font-size: 112.0%'>Bitmap(1)</a> <a href='/blog/categories/hello-world' style='font-size: 112.0%'>Hello world(1)</a> <a href='/blog/categories/io' style='font-size: 124.0%'>Io(2)</a> <a href='/blog/categories/javascript' style='font-size: 160.0%'>Javascript(5)</a> <a href='/blog/categories/nodejs' style='font-size: 112.0%'>Nodejs(1)</a> <a href='/blog/categories/octopress' style='font-size: 124.0%'>Octopress(2)</a> <a href='/blog/categories/perl' style='font-size: 160.0%'>Perl(5)</a> </span>
 </section>
 <section>
   <h2>Recent Posts</h2>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/06/05/io-lang-scope-1.html">io-lang-scope-1</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2012/05/18/io-lang-assignment.html">io language assignment code</a>

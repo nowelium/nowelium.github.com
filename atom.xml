@@ -4,7 +4,7 @@
   <title><![CDATA[ハタさんのブログ(出張版)]]></title>
   <link href="http://nowelium.github.com/atom.xml" rel="self"/>
   <link href="http://nowelium.github.com/"/>
-  <updated>2012-05-18T01:25:01+09:00</updated>
+  <updated>2012-06-05T01:07:25+09:00</updated>
   <id>http://nowelium.github.com/</id>
   <author>
     <name><![CDATA[Yusuke Hata]]></name>
@@ -12,6 +12,122 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[io-lang-scope-1]]></title>
+    <link href="http://nowelium.github.com/blog/2012/06/05/io-lang-scope-1.html"/>
+    <updated>2012-06-05T00:10:00+09:00</updated>
+    <id>http://nowelium.github.com/blog/2012/06/05/io-lang-scope-1</id>
+    <content type="html"><![CDATA[<p>今回は <del>jsxについて</del> ではなく、iolanguage の block と scope まわりについて少し</p>
+
+<p>javascript の closure ってとても可読性が高くて、よくあるサンプルならこんな感じ</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="kd">var</span> <span class="nx">createCounter</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(){</span>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">return</span> <span class="kd">function</span> <span class="p">(){</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">count</span><span class="o">++</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">};</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="nx">createCounter</span><span class="p">();</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">a</span><span class="p">());</span> <span class="c1">// =&gt; 0</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">a</span><span class="p">());</span> <span class="c1">// =&gt; 1</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">var</span> <span class="nx">b</span> <span class="o">=</span> <span class="nx">createCounter</span><span class="p">();</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">b</span><span class="p">());</span> <span class="c1">// =&gt; 0</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">b</span><span class="p">());</span> <span class="c1">// =&gt; 1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>んで、これを io でやろうとする場合、そのままやるならこんな実装になる</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">createCounter</span> <span class="o">:=</span> <span class="k">method</span> <span class="o">(</span>
+</span><span class='line'>  <span class="n">count</span> <span class="o">:=</span> <span class="mf">0</span><span class="o">;</span>
+</span><span class='line'>  <span class="n">block</span> <span class="o">(</span> <span class="n">count</span> <span class="o">=</span> <span class="n">count</span> <span class="o">+</span> <span class="mf">1</span> <span class="o">)</span>
+</span><span class='line'><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">a</span> <span class="o">:=</span> <span class="n">createCounter</span>
+</span><span class='line'><span class="n">a</span> <span class="n">call</span> <span class="n">println</span> <span class="o">=&gt;</span> <span class="mf">1</span>
+</span><span class='line'><span class="n">a</span> <span class="n">call</span> <span class="n">println</span> <span class="o">=&gt;</span> <span class="mf">2</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>と、method や block が入り組んだ、とても気持ち悪いコードになってしまう。<br/>
+ただ、これはなんてことはない、javascriptのブロックがfunctionになっているから、綺麗なコードに見えるだけだ！(とかいう)<br/>
+ちなみに、このコードを下記のように method だけにすると、スコープの参照が出来なくなってしまう</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">createCounter</span> <span class="o">:=</span> <span class="k">method</span> <span class="o">(</span>
+</span><span class='line'>  <span class="n">count</span> <span class="o">:=</span> <span class="mf">0</span><span class="o">;</span>
+</span><span class='line'>  <span class="k">method</span> <span class="o">(</span> <span class="n">count</span> <span class="o">=</span> <span class="n">count</span> <span class="o">+</span> <span class="mf">1</span> <span class="o">)</span>
+</span><span class='line'><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">b</span> <span class="o">:=</span> <span class="n">createCounter</span>
+</span><span class='line'><span class="n">b</span> <span class="n">println</span> <span class="o">=&gt;</span> <span class="n">Exception</span><span class="err">:</span> <span class="n">Object</span> <span class="n">does</span> <span class="n">not</span> <span class="n">respond</span> <span class="n">to</span> <span class="err">&#39;</span><span class="n">count</span><span class="err">&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>つまり、<code>method</code> は内包的なブロックを参照できないけど <code>block</code> は参照できる。と<br/>
+んで、これを使うと <code>interpolate</code> がひと味違ってくる</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">a</span> <span class="o">:=</span> <span class="n">block</span><span class="o">(</span><span class="n">a</span><span class="o">,</span> <span class="n">b</span><span class="o">,</span> <span class="n">c</span><span class="o">,</span>
+</span><span class='line'>  <span class="s">&quot;hello #{a} #{b + c}&quot;</span> <span class="n">interpolate</span>
+</span><span class='line'><span class="o">)</span>
+</span><span class='line'><span class="n">a</span> <span class="n">call</span><span class="o">(</span><span class="s">&quot;hello world&quot;</span><span class="o">,</span> <span class="mf">1</span><span class="o">,</span> <span class="mf">2</span><span class="o">)</span> <span class="c1">// =&gt; hello hello world 3</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>interpolate</code> は通常こんな使い方になってしまうんだけど、block はスコープを参照してるのがいいね</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">obj</span> <span class="o">:=</span> <span class="n">Object</span> <span class="k">clone</span>
+</span><span class='line'><span class="n">obj</span> <span class="n">a</span> <span class="o">:=</span> <span class="s">&quot;hello world&quot;</span>
+</span><span class='line'><span class="n">obj</span> <span class="n">b</span> <span class="o">:=</span> <span class="mf">1</span>
+</span><span class='line'><span class="n">obj</span> <span class="n">c</span> <span class="o">:=</span> <span class="mf">2</span>
+</span><span class='line'><span class="s">&quot;hello #{a} #{b + c}&quot;</span> <span class="n">interpolate</span><span class="o">(</span><span class="n">obj</span><span class="o">)</span> <span class="c1">// hello hello world 3</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>さて、何を書こうと思ってたか忘れてしまった。。。<br/>
+<code>block</code> とかその辺りは次回へ続く。。。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[io language assignment code]]></title>
