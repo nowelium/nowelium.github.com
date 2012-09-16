@@ -4,7 +4,7 @@
   <title><![CDATA[ハタさんのブログ(出張版)]]></title>
   <link href="http://nowelium.github.com/atom.xml" rel="self"/>
   <link href="http://nowelium.github.com/"/>
-  <updated>2012-09-16T22:38:26+09:00</updated>
+  <updated>2012-09-17T03:19:20+09:00</updated>
   <id>http://nowelium.github.com/</id>
   <author>
     <name><![CDATA[Yusuke Hata]]></name>
@@ -12,6 +12,244 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Io Language で yielding]]></title>
+    <link href="http://nowelium.github.com/blog/2012/09/16/io-lang-yielding.html"/>
+    <updated>2012-09-16T22:39:00+09:00</updated>
+    <id>http://nowelium.github.com/blog/2012/09/16/io-lang-yielding</id>
+    <content type="html"><![CDATA[<p>とある言語で generator が入るらしいというのをみてしまった。<br/>
+generator + yielding の仕組みらしい。なにそれ python。<br/>
+(内部イテレータや外部イテレータについてはここでは触れない感じです。)</p>
+
+<h1>Generator + yield</h1>
+
+<p>ジェネレータは、僕の認識だと closure のような仕組みに yielding できるインタフェースを用意したものだと思ってる<br/>
+それゆえ yielding で使う構文である <code>yield</code> さんを単体で使うというよりセットで使っているものが多そう</p>
+
+<p>例えば、こんな感じのループとか</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c">##### python</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">gen</span><span class="p">():</span>
+</span><span class='line'>  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">print</span> <span class="n">i</span>
+</span><span class='line'>    <span class="k">yield</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">hoge</span> <span class="o">=</span> <span class="n">gen</span><span class="p">()</span>
+</span><span class='line'><span class="n">hoge</span><span class="o">.</span><span class="n">next</span><span class="p">()</span> <span class="c"># =&gt; 0</span>
+</span><span class='line'><span class="n">hoge</span><span class="o">.</span><span class="n">next</span><span class="p">()</span> <span class="c"># =&gt; 1</span>
+</span><span class='line'><span class="n">hoge</span><span class="o">.</span><span class="n">next</span><span class="p">()</span> <span class="c"># =&gt; 2</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>なので、 <code>yield</code> 単体でも動きそうで動かない</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">yielding</span><span class="p">():</span>
+</span><span class='line'>  <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span class='line'>    <span class="k">print</span> <span class="n">i</span>
+</span><span class='line'>    <span class="k">yield</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">yielding</span><span class="p">()</span>
+</span><span class='line'><span class="n">yielding</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h1>io での yield</h1>
+
+<p>IoLanguage における yield は、単なるコンテキストスイッチ(というか、キューイングされた次の処理の実行(シングルスレッドで実行されるtimerのような))に近い感じがしている</p>
+
+<p>先ほど書いた python のコードは、io だと全然違う動きをする</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">yielding</span> <span class="o">:=</span> <span class="n">block</span><span class="o">(</span>
+</span><span class='line'>  <span class="k">for</span><span class="o">(</span><span class="n">i</span><span class="o">,</span> <span class="mf">0</span><span class="o">,</span> <span class="mf">3</span><span class="o">,</span>
+</span><span class='line'>    <span class="n">i</span> <span class="n">println</span>
+</span><span class='line'>    <span class="n">yield</span>
+</span><span class='line'>  <span class="o">)</span>
+</span><span class='line'><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">yielding</span> <span class="n">call</span><span class="o">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// =&gt;[results]</span>
+</span><span class='line'><span class="mf">0</span>
+</span><span class='line'><span class="mf">1</span>
+</span><span class='line'><span class="mf">2</span>
+</span><span class='line'><span class="mf">3</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>全然 yield してないです..<br/>
+あくまで一つの処理を終えてから、次の処理に行こうとしてそうです。(yieldで止まらない)</p>
+
+<p>ということで、呼び出し自体を非同期にする <code>@</code> とか <code>@@</code> を使います</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">yielding</span> <span class="o">:=</span> <span class="n">block</span><span class="o">(</span>
+</span><span class='line'>  <span class="k">for</span><span class="o">(</span><span class="n">i</span><span class="o">,</span> <span class="mf">0</span><span class="o">,</span> <span class="mf">3</span><span class="o">,</span>
+</span><span class='line'>    <span class="n">i</span> <span class="n">println</span>
+</span><span class='line'>    <span class="n">yield</span>
+</span><span class='line'>  <span class="o">)</span>
+</span><span class='line'><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">yielding</span> <span class="o">@@</span><span class="n">call</span>
+</span><span class='line'><span class="n">yield</span> <span class="c1">// async call を元処理に戻す</span>
+</span><span class='line'><span class="n">yield</span> <span class="c1">// 次の yield を呼び出す</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// =&gt; [results]</span>
+</span><span class='line'><span class="mf">0</span>
+</span><span class='line'><span class="mf">1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>loop でも使える</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">count</span> <span class="o">:=</span> <span class="n">block</span><span class="o">(</span>
+</span><span class='line'>  <span class="n">counter</span> <span class="o">:=</span> <span class="mf">0</span>
+</span><span class='line'>  <span class="n">loop</span><span class="o">(</span>
+</span><span class='line'>    <span class="n">counter</span> <span class="o">=</span> <span class="n">counter</span> <span class="o">+</span> <span class="mf">1</span>
+</span><span class='line'>    <span class="n">counter</span> <span class="n">println</span>
+</span><span class='line'>    <span class="n">yield</span>
+</span><span class='line'>  <span class="o">)</span>
+</span><span class='line'><span class="o">)</span>
+</span><span class='line'><span class="n">count</span> <span class="o">@</span><span class="n">call</span>
+</span><span class='line'><span class="n">yield</span> <span class="c1">// =&gt; 1</span>
+</span><span class='line'><span class="n">yield</span> <span class="c1">// =&gt; 2</span>
+</span><span class='line'><span class="n">yield</span> <span class="c1">// =&gt; 3</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>yield とひとくくりにしても、処理系によって意味合いが違うのがいいですね。<br/>
+(Java とかの Thread#yield があったけど、大まか iolang のような意味合いだったよーな)</p>
+
+<h1>io でも Generator (actor)</h1>
+
+<p>さて、ここまで出来たのですが、 python の generator のように、外部イテレータ側に値を返したいです<br/>
+そんなとき便利な actor<feature></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">generator</span> <span class="o">:=</span> <span class="k">method</span><span class="o">(</span>
+</span><span class='line'>  <span class="n">counter</span> <span class="o">:=</span> <span class="mf">0</span>
+</span><span class='line'>  <span class="n">block</span><span class="o">(</span>
+</span><span class='line'>    <span class="n">counter</span> <span class="o">=</span> <span class="n">counter</span> <span class="o">+</span> <span class="mf">1</span>
+</span><span class='line'>  <span class="o">)</span>
+</span><span class='line'><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">foo</span> <span class="o">:=</span> <span class="n">generator</span>
+</span><span class='line'><span class="n">val_1</span> <span class="o">:=</span> <span class="n">foo</span> <span class="o">@</span><span class="n">call</span>
+</span><span class='line'><span class="n">val_2</span> <span class="o">:=</span> <span class="n">foo</span> <span class="o">@</span><span class="n">call</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">val_1</span> <span class="n">println</span> <span class="c1">// =&gt; 1</span>
+</span><span class='line'><span class="n">val_2</span> <span class="n">println</span> <span class="c1">// =&gt; 2</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>とりあえず、これで動きそう。もはや yield どこ行ったって感じだけど。<br/>
+promise でもできそうです。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">generator2</span> <span class="o">:=</span> <span class="k">method</span><span class="o">(</span><span class="n">next</span><span class="o">,</span>
+</span><span class='line'>  <span class="n">counter</span> <span class="o">:=</span> <span class="mf">0</span>
+</span><span class='line'>  <span class="n">block</span> <span class="o">(</span>
+</span><span class='line'>    <span class="n">counter</span> <span class="o">=</span> <span class="n">counter</span> <span class="o">+</span> <span class="mf">1</span>
+</span><span class='line'>    <span class="n">next</span><span class="o">(</span><span class="n">counter</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">)</span>
+</span><span class='line'><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">foo</span> <span class="o">:=</span> <span class="n">generator2</span><span class="o">(</span><span class="k">method</span><span class="o">(</span><span class="n">v</span><span class="o">,</span> <span class="n">v</span> <span class="n">println</span><span class="o">))</span>
+</span><span class='line'><span class="n">foo</span> <span class="o">@@</span><span class="n">call</span>
+</span><span class='line'><span class="n">yield</span>
+</span><span class='line'><span class="n">foo</span> <span class="o">@@</span><span class="n">call</span>
+</span><span class='line'><span class="n">yield</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ここで yield 使ってるので、 <code>@@</code> で呼び出したコルーチンを呼び戻すため<br/>
+ということで、ここまで</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[io scope #1]]></title>
