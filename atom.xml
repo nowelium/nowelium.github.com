@@ -4,7 +4,7 @@
   <title><![CDATA[ハタさんのブログ(出張版)]]></title>
   <link href="http://nowelium.github.com/atom.xml" rel="self"/>
   <link href="http://nowelium.github.com/"/>
-  <updated>2012-09-17T03:19:20+09:00</updated>
+  <updated>2013-04-14T21:23:04+09:00</updated>
   <id>http://nowelium.github.com/</id>
   <author>
     <name><![CDATA[Yusuke Hata]]></name>
@@ -12,6 +12,177 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Io languageでタイマー]]></title>
+    <link href="http://nowelium.github.com/blog/2013/04/14/io-nonblocking-timer.html"/>
+    <updated>2013-04-14T20:34:00+09:00</updated>
+    <id>http://nowelium.github.com/blog/2013/04/14/io-nonblocking-timer</id>
+    <content type="html"><![CDATA[<p>Ioを使っていていつも思うのが、どうやってタイマーを実装するか。という問題</p>
+
+<p>たとえば、3秒毎に特定の処理をしたくなった時、こんなコードを書いてしまいたくなる</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">loop</span> <span class="o">(</span>
+</span><span class='line'>  <span class="n">proc1</span>
+</span><span class='line'>  <span class="n">proc2</span>
+</span><span class='line'>  <span class="n">proc3</span>
+</span><span class='line'>  <span class="err">:</span>
+</span><span class='line'>  <span class="n">wait</span><span class="o">(</span><span class="mf">3</span><span class="o">)</span>
+</span><span class='line'><span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>一見動いてしまうけど<br/>
+でも、これは実はダメで loop でブロックされてしまうし、 <code>wait</code> 時にスレッドがブロックされてしまう</p>
+
+<p>もうかれこれ3年くらい前に実装したものが↓<br/>
+<a href="http://coderepos.org/share/browser/lang/io/Timer">/lang/io/Timer – CodeRepos::Share – Trac</a></p>
+
+<div><script src='https://gist.github.com/5382432.js?file='></script>
+<noscript><pre><code></code></pre></noscript></div>
+
+
+<p>まぁ、なんとなく動くんだけど、<code>System sleep</code> や <code>wait</code> は全体がブロックされてしまう問題があり
+同時並行性に問題があった</p>
+
+<p>ということで、これをどうにかして解決したいなぁ。と3年ぶりに思い至り
+<code>Concurrency Thread</code> でどうにか出来るんじゃないか。ということで、 non-blocking な実装を考えてみた</p>
+
+<div><script src='https://gist.github.com/5382439.js?file='></script>
+<noscript><pre><code></code></pre></noscript></div>
+
+
+<p>実装としては、親スレッドで 時間を受け取る Server を立ててしまって、子スレッドを生成して<br/>
+その子スレッド内で <code>sleep</code> すれば親スレッドをブロックさせないという仕掛け</p>
+
+<p>親スレッドはこんな感じに作っておいて</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">Timer</span> <span class="n">Interval</span> <span class="n">Loop</span> <span class="o">:=</span> <span class="n">Server</span> <span class="k">clone</span> <span class="k">do</span> <span class="o">(</span>
+</span><span class='line'>  <span class="n">setPort</span><span class="o">(</span><span class="mf">11002</span><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">listener</span> <span class="o">:=</span> <span class="n">Map</span> <span class="k">clone</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">addListener</span> <span class="o">:=</span> <span class="k">method</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">callback</span><span class="o">,</span>
+</span><span class='line'>    <span class="n">listener</span> <span class="n">atPut</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">callback</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">Handler</span> <span class="o">:=</span> <span class="n">Object</span> <span class="k">clone</span> <span class="k">do</span> <span class="o">(</span>
+</span><span class='line'>    <span class="n">handle</span> <span class="o">:=</span> <span class="k">method</span><span class="o">(</span><span class="n">socket</span><span class="o">,</span> <span class="n">server</span><span class="o">,</span>
+</span><span class='line'>      <span class="n">while</span><span class="o">(</span><span class="n">socket</span> <span class="n">isOpen</span><span class="o">,</span>
+</span><span class='line'>        <span class="k">if</span><span class="o">(</span><span class="n">socket</span> <span class="n">read</span><span class="o">)</span> <span class="k">then</span> <span class="o">(</span>
+</span><span class='line'>          <span class="n">data</span> <span class="o">:=</span> <span class="n">socket</span> <span class="n">readBuffer</span>
+</span><span class='line'>          <span class="n">id</span> <span class="o">:=</span> <span class="n">data</span> <span class="n">beforeSeq</span><span class="o">(</span><span class="s">&quot;:&quot;</span><span class="o">)</span>
+</span><span class='line'>          <span class="n">timestamp</span> <span class="o">:=</span> <span class="n">data</span> <span class="n">afterSeq</span><span class="o">(</span><span class="s">&quot;:&quot;</span><span class="o">)</span>
+</span><span class='line'>          <span class="k">if</span><span class="o">(</span><span class="n">server</span> <span class="n">listener</span> <span class="n">hasKey</span><span class="o">(</span><span class="n">id</span><span class="o">))</span> <span class="k">then</span> <span class="o">(</span>
+</span><span class='line'>            <span class="n">callback</span> <span class="o">:=</span> <span class="n">server</span> <span class="n">listener</span> <span class="n">at</span><span class="o">(</span><span class="n">id</span><span class="o">)</span>
+</span><span class='line'>            <span class="n">callback</span> <span class="o">@</span><span class="n">call</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">timestamp</span> <span class="n">asNumber</span><span class="o">)</span>
+</span><span class='line'>          <span class="o">)</span>
+</span><span class='line'>        <span class="o">)</span>
+</span><span class='line'>        <span class="n">socket</span> <span class="n">readBuffer</span> <span class="n">empty</span>
+</span><span class='line'>      <span class="o">)</span>
+</span><span class='line'>      <span class="n">socket</span> <span class="n">close</span>
+</span><span class='line'>    <span class="o">)</span>
+</span><span class='line'>  <span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">handleSocket</span> <span class="o">:=</span> <span class="k">method</span><span class="o">(</span><span class="n">socket</span><span class="o">,</span> <span class="n">Handler</span> <span class="k">clone</span> <span class="o">@</span><span class="n">handle</span><span class="o">(</span><span class="n">socket</span><span class="o">,</span> <span class="n">self</span><span class="o">))</span>
+</span><span class='line'><span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>子スレッドはソケットで書き込んであげている</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">thread</span> <span class="o">=</span> <span class="n">Thread</span> <span class="n">createThread</span><span class="o">(</span><span class="s">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="s">  id := &quot;</span><span class="c1">#{id}&quot;</span>
+</span><span class='line'>  <span class="n">host</span> <span class="o">:=</span> <span class="s">&quot;localhost&quot;</span>
+</span><span class='line'>  <span class="n">port</span> <span class="o">:=</span> <span class="c1">#{Timer Interval Loop port}</span>
+</span><span class='line'>  <span class="n">interval</span> <span class="o">:=</span> <span class="c1">#{interval}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">socket</span> <span class="o">:=</span> <span class="n">Socket</span> <span class="k">clone</span>
+</span><span class='line'>  <span class="n">socket</span> <span class="n">setHost</span><span class="o">(</span><span class="n">host</span><span class="o">)</span>
+</span><span class='line'>  <span class="n">socket</span> <span class="n">setPort</span><span class="o">(</span><span class="n">port</span><span class="o">)</span>
+</span><span class='line'>  <span class="n">socket</span> <span class="n">connect</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">socket</span> <span class="n">isOpen</span><span class="o">)</span> <span class="k">then</span> <span class="o">(</span>
+</span><span class='line'>    <span class="s">&quot;client connected&quot;</span> <span class="n">println</span>
+</span><span class='line'>  <span class="o">)</span> <span class="k">else</span> <span class="o">(</span>
+</span><span class='line'>    <span class="n">Exception</span> <span class="n">raise</span><span class="o">(</span><span class="s">&quot;connection failed&quot;</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">timestamp</span> <span class="o">:=</span> <span class="n">Date</span> <span class="n">now</span> <span class="n">asNumberString</span>
+</span><span class='line'>  <span class="n">msg</span> <span class="o">:=</span> <span class="s">&quot;\#\{id\}:\#\{timestamp\}&quot;</span>
+</span><span class='line'>  <span class="n">loop</span><span class="o">(</span>
+</span><span class='line'>    <span class="n">timestamp</span> <span class="o">:=</span> <span class="n">Date</span> <span class="n">now</span> <span class="n">asNumberString</span>
+</span><span class='line'>    <span class="n">socket</span> <span class="n">write</span><span class="o">(</span><span class="n">msg</span> <span class="n">interpolate</span><span class="o">)</span>
+</span><span class='line'>    <span class="n">wait</span><span class="o">(</span><span class="n">interval</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">)</span>
+</span><span class='line'><span class="s">&quot;&quot;</span><span class="err">&quot;</span> <span class="n">interpolate</span><span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>まぁ、時間でブロックされずにコールバックをとれる javascript の <code>setTimeout</code> と <code>setInterval</code> がすごいなぁ。ってのとそれをどうやって io で作ろうかなと思った奮闘記</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Io Language で yielding]]></title>

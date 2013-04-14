@@ -9,9 +9,14 @@
 <title>ハタさんのブログ(出張版)</title>
 <meta name="author" content="Yusuke Hata">
 <meta name="description"
-      content="Io Language で Yielding Sep 16th, 2012 とある言語で generator が入るらしいというのをみてしまった。
-generator + yielding の仕組みらしい。なにそれ python。
-( &hellip;">
+      content="Io Languageでタイマー Apr 14th, 2013 Ioを使っていていつも思うのが、どうやってタイマーを実装するか。という問題 たとえば、3秒毎に特定の処理をしたくなった時、こんなコードを書いてしまいたくなる 1
+2
+3
+4
+5
+6
+7
+loop ( proc1 proc2 &hellip;">
 
 
 <!-- http://t.co/dKP3o1e -->
@@ -87,6 +92,206 @@ generator + yielding の仕組みらしい。なにそれ python。
   <div id="top">
 
   
+  
+  
+    <article class="hentry" role="article">
+      
+  <header>
+    
+      <h1 class="entry-title">Io Languageでタイマー</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-04-14T20:34:00+09:00" pubdate data-updated="true">Apr 14<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Ioを使っていていつも思うのが、どうやってタイマーを実装するか。という問題</p>
+
+<p>たとえば、3秒毎に特定の処理をしたくなった時、こんなコードを書いてしまいたくなる</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">loop</span> <span class="o">(</span>
+</span><span class='line'>  <span class="n">proc1</span>
+</span><span class='line'>  <span class="n">proc2</span>
+</span><span class='line'>  <span class="n">proc3</span>
+</span><span class='line'>  <span class="err">:</span>
+</span><span class='line'>  <span class="n">wait</span><span class="o">(</span><span class="mf">3</span><span class="o">)</span>
+</span><span class='line'><span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>一見動いてしまうけど<br/>
+でも、これは実はダメで loop でブロックされてしまうし、 <code>wait</code> 時にスレッドがブロックされてしまう</p>
+
+<p>もうかれこれ3年くらい前に実装したものが↓<br/>
+<a href="http://coderepos.org/share/browser/lang/io/Timer">/lang/io/Timer – CodeRepos::Share – Trac</a></p>
+
+<div><script src='https://gist.github.com/5382432.js?file='></script>
+<noscript><pre><code></code></pre></noscript></div>
+
+
+<p>まぁ、なんとなく動くんだけど、<code>System sleep</code> や <code>wait</code> は全体がブロックされてしまう問題があり
+同時並行性に問題があった</p>
+
+<p>ということで、これをどうにかして解決したいなぁ。と3年ぶりに思い至り
+<code>Concurrency Thread</code> でどうにか出来るんじゃないか。ということで、 non-blocking な実装を考えてみた</p>
+
+<div><script src='https://gist.github.com/5382439.js?file='></script>
+<noscript><pre><code></code></pre></noscript></div>
+
+
+<p>実装としては、親スレッドで 時間を受け取る Server を立ててしまって、子スレッドを生成して<br/>
+その子スレッド内で <code>sleep</code> すれば親スレッドをブロックさせないという仕掛け</p>
+
+<p>親スレッドはこんな感じに作っておいて</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">Timer</span> <span class="n">Interval</span> <span class="n">Loop</span> <span class="o">:=</span> <span class="n">Server</span> <span class="k">clone</span> <span class="k">do</span> <span class="o">(</span>
+</span><span class='line'>  <span class="n">setPort</span><span class="o">(</span><span class="mf">11002</span><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">listener</span> <span class="o">:=</span> <span class="n">Map</span> <span class="k">clone</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">addListener</span> <span class="o">:=</span> <span class="k">method</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">callback</span><span class="o">,</span>
+</span><span class='line'>    <span class="n">listener</span> <span class="n">atPut</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">callback</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">Handler</span> <span class="o">:=</span> <span class="n">Object</span> <span class="k">clone</span> <span class="k">do</span> <span class="o">(</span>
+</span><span class='line'>    <span class="n">handle</span> <span class="o">:=</span> <span class="k">method</span><span class="o">(</span><span class="n">socket</span><span class="o">,</span> <span class="n">server</span><span class="o">,</span>
+</span><span class='line'>      <span class="n">while</span><span class="o">(</span><span class="n">socket</span> <span class="n">isOpen</span><span class="o">,</span>
+</span><span class='line'>        <span class="k">if</span><span class="o">(</span><span class="n">socket</span> <span class="n">read</span><span class="o">)</span> <span class="k">then</span> <span class="o">(</span>
+</span><span class='line'>          <span class="n">data</span> <span class="o">:=</span> <span class="n">socket</span> <span class="n">readBuffer</span>
+</span><span class='line'>          <span class="n">id</span> <span class="o">:=</span> <span class="n">data</span> <span class="n">beforeSeq</span><span class="o">(</span><span class="s">&quot;:&quot;</span><span class="o">)</span>
+</span><span class='line'>          <span class="n">timestamp</span> <span class="o">:=</span> <span class="n">data</span> <span class="n">afterSeq</span><span class="o">(</span><span class="s">&quot;:&quot;</span><span class="o">)</span>
+</span><span class='line'>          <span class="k">if</span><span class="o">(</span><span class="n">server</span> <span class="n">listener</span> <span class="n">hasKey</span><span class="o">(</span><span class="n">id</span><span class="o">))</span> <span class="k">then</span> <span class="o">(</span>
+</span><span class='line'>            <span class="n">callback</span> <span class="o">:=</span> <span class="n">server</span> <span class="n">listener</span> <span class="n">at</span><span class="o">(</span><span class="n">id</span><span class="o">)</span>
+</span><span class='line'>            <span class="n">callback</span> <span class="o">@</span><span class="n">call</span><span class="o">(</span><span class="n">id</span><span class="o">,</span> <span class="n">timestamp</span> <span class="n">asNumber</span><span class="o">)</span>
+</span><span class='line'>          <span class="o">)</span>
+</span><span class='line'>        <span class="o">)</span>
+</span><span class='line'>        <span class="n">socket</span> <span class="n">readBuffer</span> <span class="n">empty</span>
+</span><span class='line'>      <span class="o">)</span>
+</span><span class='line'>      <span class="n">socket</span> <span class="n">close</span>
+</span><span class='line'>    <span class="o">)</span>
+</span><span class='line'>  <span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">handleSocket</span> <span class="o">:=</span> <span class="k">method</span><span class="o">(</span><span class="n">socket</span><span class="o">,</span> <span class="n">Handler</span> <span class="k">clone</span> <span class="o">@</span><span class="n">handle</span><span class="o">(</span><span class="n">socket</span><span class="o">,</span> <span class="n">self</span><span class="o">))</span>
+</span><span class='line'><span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>子スレッドはソケットで書き込んであげている</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='io'><span class='line'><span class="n">thread</span> <span class="o">=</span> <span class="n">Thread</span> <span class="n">createThread</span><span class="o">(</span><span class="s">&quot;&quot;&quot;</span>
+</span><span class='line'><span class="s">  id := &quot;</span><span class="c1">#{id}&quot;</span>
+</span><span class='line'>  <span class="n">host</span> <span class="o">:=</span> <span class="s">&quot;localhost&quot;</span>
+</span><span class='line'>  <span class="n">port</span> <span class="o">:=</span> <span class="c1">#{Timer Interval Loop port}</span>
+</span><span class='line'>  <span class="n">interval</span> <span class="o">:=</span> <span class="c1">#{interval}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">socket</span> <span class="o">:=</span> <span class="n">Socket</span> <span class="k">clone</span>
+</span><span class='line'>  <span class="n">socket</span> <span class="n">setHost</span><span class="o">(</span><span class="n">host</span><span class="o">)</span>
+</span><span class='line'>  <span class="n">socket</span> <span class="n">setPort</span><span class="o">(</span><span class="n">port</span><span class="o">)</span>
+</span><span class='line'>  <span class="n">socket</span> <span class="n">connect</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">socket</span> <span class="n">isOpen</span><span class="o">)</span> <span class="k">then</span> <span class="o">(</span>
+</span><span class='line'>    <span class="s">&quot;client connected&quot;</span> <span class="n">println</span>
+</span><span class='line'>  <span class="o">)</span> <span class="k">else</span> <span class="o">(</span>
+</span><span class='line'>    <span class="n">Exception</span> <span class="n">raise</span><span class="o">(</span><span class="s">&quot;connection failed&quot;</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">timestamp</span> <span class="o">:=</span> <span class="n">Date</span> <span class="n">now</span> <span class="n">asNumberString</span>
+</span><span class='line'>  <span class="n">msg</span> <span class="o">:=</span> <span class="s">&quot;\#\{id\}:\#\{timestamp\}&quot;</span>
+</span><span class='line'>  <span class="n">loop</span><span class="o">(</span>
+</span><span class='line'>    <span class="n">timestamp</span> <span class="o">:=</span> <span class="n">Date</span> <span class="n">now</span> <span class="n">asNumberString</span>
+</span><span class='line'>    <span class="n">socket</span> <span class="n">write</span><span class="o">(</span><span class="n">msg</span> <span class="n">interpolate</span><span class="o">)</span>
+</span><span class='line'>    <span class="n">wait</span><span class="o">(</span><span class="n">interval</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">)</span>
+</span><span class='line'><span class="s">&quot;&quot;</span><span class="err">&quot;</span> <span class="n">interpolate</span><span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>まぁ、時間でブロックされずにコールバックをとれる javascript の <code>setTimeout</code> と <code>setInterval</code> がすごいなぁ。ってのとそれをどうやって io で作ろうかなと思った奮闘記</p>
+</div>
+  
+  <footer style="text-align: right">
+    <a rel="full-article" href="/blog/2013/04/14/io-nonblocking-timer.html">permalink</a>
+  </footer>
+
+
+    </article>
   
   
     <article class="hentry" role="article">
@@ -2264,481 +2469,6 @@ else区を書きたくない派(あるのか?)の一員としては、単純な�
 
     </article>
   
-  
-    <article class="hentry" role="article">
-      
-  <header>
-    
-      <h1 class="entry-title">Octopress でブログを書いてみる</h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2012-03-26T23:15:00+09:00" pubdate data-updated="true">Mar 26<span>th</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>html で今までゴリゴリ書いてきたけど、疲れたので markdown な文法を使いたいなぁ<br/>
-ってのと、ブログをもう少し手軽に書けて、自由度が欲しい(ブラウザから離れてみたい)なぁって思って <a href="http://octopress.org/">octopress</a> を使ってみることにした。</p>
-
-<h1>最初にやったこと</h1>
-
-<ul>
-<li>kui theme を導入</li>
-<li>tag cloud を導入</li>
-<li>それぞれについて、html, css を少し編集</li>
-</ul>
-
-
-<h2>kui を導入</h2>
-
-<p>footer にも出しているけど、デフォルトのテーマが少し気に入らないので <br/>
-<a href="https://github.com/kui/k-ui-octopress-theme">Octopress Theme for k-ui.jp</a> を入れてみる</p>
-
-<p>少し変更したコードは後述</p>
-
-<h2>tag cloud を導入</h2>
-
-<p>categories が使えるけど、表示される トコがなかったので、導入</p>
-
-<p><a href="http://tokkonopapa.github.com/blog/2012/01/04/octopress-plugin-for-categories-cloud/">http://tokkonopapa.github.com/blog/2012/01/04/octopress-plugin-for-categories-cloud/</a> このまま</p>
-
-<h2>後述部分</h2>
-
-<p>まず、kuiのcssを変更した。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-</pre></td><td class='code'><pre><code class='css'><span class='line'><span class="err">#</span> <span class="nt">sass</span><span class="o">/</span><span class="nt">_kui</span><span class="nc">.scss</span>
-</span><span class='line'><span class="nt">---</span> <span class="nc">.themes</span><span class="o">/</span><span class="nt">kui</span><span class="o">/</span><span class="nt">sass</span><span class="o">/</span><span class="nt">_kui</span><span class="nc">.scss</span>   <span class="nt">2012-03-24</span> <span class="nt">21</span><span class="nd">:40:27</span><span class="nc">.000000000</span> <span class="o">+</span><span class="nt">0900</span>
-</span><span class='line'><span class="o">+++</span> <span class="nt">sass</span><span class="o">/</span><span class="nt">_kui</span><span class="nc">.scss</span>  <span class="nt">2012-03-24</span> <span class="nt">23</span><span class="nd">:17:26</span><span class="nc">.000000000</span> <span class="o">+</span><span class="nt">0900</span>
-</span><span class='line'><span class="o">@@</span> <span class="nt">-9</span><span class="o">,</span><span class="nt">7</span> <span class="o">+</span><span class="nt">9</span><span class="o">,</span><span class="nt">7</span> <span class="o">@@</span>
-</span><span class='line'>   <span class="nt">padding</span><span class="o">:</span> <span class="nt">0px</span><span class="o">;</span>
-</span><span class='line'> <span class="err">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="nt">-h2</span><span class="o">,</span> <span class="nt">h3</span><span class="o">,</span> <span class="nt">h4</span><span class="o">,</span> <span class="nt">h5</span><span class="o">,</span> <span class="nt">h6</span><span class="p">{</span>
-</span><span class='line'><span class="o">+</span><span class="n">h1</span><span class="o">,</span> <span class="n">h2</span><span class="o">,</span> <span class="n">h3</span><span class="o">,</span> <span class="n">h4</span><span class="o">,</span> <span class="n">h5</span><span class="o">,</span> <span class="n">h6</span><span class="err">{</span>
-</span><span class='line'>   <span class="k">font-family</span><span class="o">:</span> <span class="s2">&quot;Hiragino Kaku Gothic Pro W3&quot;</span><span class="o">,</span> <span class="s2">&quot;ヒラギノ角ゴ Pro W3&quot;</span><span class="o">,</span> <span class="n">Meiryo</span><span class="o">,</span> <span class="s2">&quot;メイリオ&quot;</span><span class="o">,</span> <span class="s2">&quot;MS P Gothic&quot;</span><span class="o">,</span> <span class="s2">&quot;ＭＳ Ｐゴシック&quot;</span><span class="o">,</span> <span class="k">sans-serif</span><span class="p">;</span>
-</span><span class='line'> <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">@@</span> <span class="nt">-125</span><span class="o">,</span><span class="nt">6</span> <span class="o">+</span><span class="nt">125</span><span class="o">,</span><span class="nt">7</span> <span class="o">@@</span>
-</span><span class='line'>     <span class="nt">margin</span><span class="o">:</span> <span class="nt">0px</span><span class="o">;</span>
-</span><span class='line'>     <span class="nt">padding</span><span class="o">:</span> <span class="nt">8px</span><span class="o">;</span>
-</span><span class='line'>     <span class="nt">font-size</span><span class="o">:</span> <span class="nt">80</span><span class="o">%;</span>
-</span><span class='line'><span class="o">+</span>    <span class="nt">clear</span><span class="o">:</span> <span class="nt">both</span><span class="o">;</span>
-</span><span class='line'>     <span class="nt">p</span> <span class="p">{</span>
-</span><span class='line'>  <span class="k">margin</span><span class="o">:</span> <span class="m">0px</span><span class="p">;</span>
-</span><span class='line'>     <span class="p">}</span>
-</span><span class='line'><span class="o">@@</span> <span class="nt">-139</span><span class="o">,</span><span class="nt">3</span> <span class="o">+</span><span class="nt">140</span><span class="o">,</span><span class="nt">39</span> <span class="o">@@</span>
-</span><span class='line'> <span class="nf">#dsq-reply</span> <span class="o">&gt;</span> <span class="nt">h3</span><span class="o">,</span> <span class="nf">#dsq-account-dropdown</span><span class="o">,</span> <span class="nf">#dsq-subscribe</span> <span class="p">{</span> <span class="k">display</span><span class="o">:</span> <span class="k">none</span><span class="p">;</span> <span class="p">}</span>
-</span><span class='line'> <span class="nf">#disqus_thread</span> <span class="nf">#dsq-content</span> <span class="nf">#dsq-global-toolbar</span> <span class="p">{</span> <span class="k">margin</span><span class="o">:</span> <span class="m">0.3em</span> <span class="m">0px</span><span class="p">;</span> <span class="p">}</span>
-</span><span class='line'> <span class="nf">#dsq-reply</span><span class="p">{</span> <span class="k">margin</span><span class="o">:</span> <span class="m">0.3em</span><span class="p">}</span>
-</span><span class='line'><span class="o">+</span>
-</span><span class='line'><span class="o">+</span><span class="c">/* custom */</span>
-</span><span class='line'><span class="o">+</span><span class="nt">header</span><span class="o">[</span><span class="nt">role</span><span class="o">=</span><span class="s2">&quot;banner&quot;</span><span class="o">]</span> <span class="nt">a</span><span class="nd">:hover</span> <span class="p">{</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">text-decoration</span><span class="o">:</span> <span class="k">none</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span><span class="p">}</span>
-</span><span class='line'><span class="o">+</span><span class="nc">.pagination</span> <span class="p">{</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">display</span><span class="o">:</span> <span class="k">block</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">clear</span><span class="o">:</span> <span class="k">both</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">margin-top</span><span class="o">:</span> <span class="m">40px</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span><span class="p">}</span>
-</span><span class='line'><span class="o">+</span>
-</span><span class='line'><span class="o">+</span><span class="nc">.sidebar</span> <span class="p">{</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">display</span><span class="o">:</span> <span class="k">block</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">clear</span><span class="o">:</span> <span class="k">both</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">margin-top</span><span class="o">:</span> <span class="m">40px</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">border-top</span><span class="o">:</span> <span class="m">1px</span> <span class="k">solid</span> <span class="m">#ddd</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span><span class="p">}</span>
-</span><span class='line'><span class="o">+</span><span class="nc">.sidebar</span> <span class="nt">section</span> <span class="p">{</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">float</span><span class="o">:</span> <span class="k">left</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">width</span><span class="o">:</span> <span class="m">380px</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">margin-left</span><span class="o">:</span> <span class="m">20px</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span><span class="p">}</span>
-</span><span class='line'><span class="o">+</span><span class="nc">.sidebar</span> <span class="nt">section</span><span class="nd">:nth-child</span><span class="o">(</span><span class="nt">2n</span><span class="o">+</span><span class="nt">1</span><span class="o">)</span> <span class="p">{</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">clear</span><span class="o">:</span> <span class="k">left</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span><span class="p">}</span>
-</span><span class='line'><span class="o">+</span>
-</span><span class='line'><span class="o">+</span><span class="nc">.tag-cloud</span> <span class="nt">a</span> <span class="p">{</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">font-size</span><span class="o">:</span> <span class="m">80</span><span class="o">%</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">line-height</span><span class="o">:</span> <span class="m">2em</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span><span class="p">}</span>
-</span><span class='line'><span class="o">+</span>
-</span><span class='line'><span class="o">+</span><span class="nc">.avator</span> <span class="p">{</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">width</span><span class="o">:</span> <span class="m">128px</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">height</span><span class="o">:</span> <span class="m">128px</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span>  <span class="k">padding</span><span class="o">:</span> <span class="m">8px</span> <span class="m">0</span> <span class="m">0</span> <span class="m">9px</span><span class="p">;</span>
-</span><span class='line'><span class="o">+</span><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>h1もh2,h3と同じスタイルを適用するように<br/>
-.pagination, .sidebar を実装して、.sidebarは2カラムで表示するように変更<br/>
-.tag-cloud は tag-cloudプラグインで書かれていたものをそのまま、<br/>
-.avator は custom/acide/about.html の変更にて(この後に出てくる)</p>
-
-<h3>source/_includes/social_service_links.html の変更</h3>
-
-<p>これは本家のままだと、上部に出てくるgithub,twitterがkuiのままになってしまうので、下記のように変更</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='diff'><span class='line'># source/_includes/social_service_links.html
-</span><span class='line'><span class="gd">--- .themes/kui/source/_includes/social_service_links.html   2012-03-24 21:40:27.000000000 +0900</span>
-</span><span class='line'><span class="gi">+++ source/_includes/social_service_links.html   2012-03-24 22:16:02.000000000 +0900</span>
-</span><span class='line'><span class="gu">@@ -1,17 +1,18 @@</span>
-</span><span class='line'>
-</span><span class='line'> &lt;div id=&quot;social-links&quot;&gt;
-</span><span class='line'>   &lt;ul&gt;
-</span><span class='line'><span class="gi">+    {% if site.github_user %}</span>
-</span><span class='line'>     &lt;li id=&quot;social-links-github&quot;&gt;
-</span><span class='line'><span class="gd">-      &lt;a title=&quot;GitHub&quot; href=&quot;https://github.com/kui&quot;&gt;github&lt;/a&gt;</span>
-</span><span class='line'><span class="gi">+      &lt;a title=&quot;GitHub&quot; href=&quot;https://github.com/{{site.github_user}}&quot;&gt;GitHub&lt;/a&gt;</span>
-</span><span class='line'>     &lt;/li&gt;
-</span><span class='line'><span class="gi">+    {% endif %}</span>
-</span><span class='line'><span class="gi">+    {% if site.twitter_user %}</span>
-</span><span class='line'>     &lt;li id=&quot;social-links-twitter&quot;&gt;
-</span><span class='line'><span class="gd">-      &lt;a title=&quot;twitter&quot; href=&quot;http://twitter.com/k_ui&quot;&gt;twitter&lt;/a&gt;</span>
-</span><span class='line'><span class="gd">-    &lt;/li&gt;</span>
-</span><span class='line'><span class="gd">-    &lt;li id=&quot;social-links-tumblr&quot;&gt;</span>
-</span><span class='line'><span class="gd">-      &lt;a title=&quot;tumblr&quot; href=&quot;http://daftbeats.tumblr.com/&quot;&gt;tumblr&lt;/a&gt;</span>
-</span><span class='line'><span class="gi">+      &lt;a title=&quot;twitter&quot; href=&quot;http://twitter.com/{{site.twitter_user}}&quot;&gt;twitter&lt;/a&gt;</span>
-</span><span class='line'>     &lt;/li&gt;
-</span><span class='line'><span class="gi">+    {% endif %}</span>
-</span><span class='line'>     &lt;li id=&quot;social-links-feed&quot;&gt;
-</span><span class='line'><span class="gd">-      &lt;a title=&quot;feed&quot; href=&quot;http://k-ui.jp/atom.xml&quot;&gt;feed&lt;/a&gt;</span>
-</span><span class='line'><span class="gi">+      &lt;a title=&quot;feed&quot; href=&quot;http://nowelium.github.com/atom.xml&quot;&gt;feed&lt;/a&gt;</span>
-</span><span class='line'>     &lt;/li&gt;
-</span><span class='line'>   &lt;/ul&gt;
-</span><span class='line'> &lt;/div&gt;
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>基本はそのまま、ただ、if site.github からuserを拾うようにてみたりしてみた。</p>
-
-<h3>source/index.html を変更</h3>
-
-<p>kuiのデフォルトはかなりシンプルで、トップページに記事のリンクへのリンクだけになっているので<br/>
-もう少し記事を全面に出せるように、classicの部分をmerge</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-</pre></td><td class='code'><pre><code class='diff'><span class='line'># source/index.html
-</span><span class='line'><span class="gd">--- .themes/kui/source/index.html    2012-03-24 21:46:01.000000000 +0900</span>
-</span><span class='line'><span class="gi">+++ source/index.html    2012-03-24 22:21:55.000000000 +0900</span>
-</span><span class='line'><span class="gu">@@ -4,27 +4,30 @@</span>
-</span><span class='line'> ---
-</span><span class='line'> &lt;div id=&quot;top&quot;&gt;
-</span><span class='line'>
-</span><span class='line'><span class="gd">-  &lt;div id=&quot;recent_posts&quot;&gt;</span>
-</span><span class='line'><span class="gd">-    &lt;h2&gt;最近のブログ投稿&lt;/h2&gt;</span>
-</span><span class='line'><span class="gd">-</span>
-</span><span class='line'><span class="gd">-    &lt;ul&gt;</span>
-</span><span class='line'><span class="gd">-    {% for post in paginator.posts %}</span>
-</span><span class='line'><span class="gd">-      &lt;li&gt;</span>
-</span><span class='line'><span class="gd">-        &lt;article&gt;</span>
-</span><span class='line'><span class="gd">-          &lt;a rel=&quot;full-article&quot; href=&quot;{{ post.url }}&quot;&gt;{{ post.title }}&lt;/a&gt;</span>
-</span><span class='line'><span class="gd">-          （&lt;time datetime=&quot;{{post.date}}&quot; pubdate&gt;{{post.date_formatted}}&lt;/time&gt;）</span>
-</span><span class='line'><span class="gd">-        &lt;/article&gt;</span>
-</span><span class='line'><span class="gd">-      &lt;/li&gt;</span>
-</span><span class='line'><span class="gd">-    {% endfor %}</span>
-</span><span class='line'><span class="gd">-    &lt;/ul&gt;</span>
-</span><span class='line'><span class="gd">-</span>
-</span><span class='line'><span class="gd">-    &lt;p&gt;&lt;a href=&quot;/blog/archives&quot;&gt;&amp;laquo; 過去の記事&lt;/a&gt;&lt;/p&gt;</span>
-</span><span class='line'><span class="gd">-</span>
-</span><span class='line'><span class="gi">+  {% assign index = true %}</span>
-</span><span class='line'><span class="gi">+  {% for post in paginator.posts %}</span>
-</span><span class='line'><span class="gi">+  {% assign content = post.content %}</span>
-</span><span class='line'><span class="gi">+    &lt;article class=&quot;hentry&quot; role=&quot;article&quot;&gt;</span>
-</span><span class='line'><span class="gi">+      {% include article.html %}</span>
-</span><span class='line'><span class="gi">+    &lt;/article&gt;</span>
-</span><span class='line'><span class="gi">+  {% endfor %}</span>
-</span><span class='line'><span class="gi">+</span>
-</span><span class='line'><span class="gi">+  &lt;div class=&quot;pagination&quot;&gt;</span>
-</span><span class='line'><span class="gi">+    {% if paginator.next_page %}</span>
-</span><span class='line'><span class="gi">+      &lt;a class=&quot;prev&quot; href=&quot;{{paginator.next_page}}&quot;&gt;&amp;larr; Older&lt;/a&gt;</span>
-</span><span class='line'><span class="gi">+    {% endif %}</span>
-</span><span class='line'><span class="gi">+    &lt;a href=&quot;/blog/archives&quot;&gt;Archives&lt;/a&gt;</span>
-</span><span class='line'><span class="gi">+    {% if paginator.previous_page %}</span>
-</span><span class='line'><span class="gi">+    &lt;a class=&quot;next&quot; href=&quot;{{paginator.previous_page}}&quot;&gt;Newer &amp;rarr;&lt;/a&gt;</span>
-</span><span class='line'><span class="gi">+    {% endif %}</span>
-</span><span class='line'>   &lt;/div&gt;
-</span><span class='line'>
-</span><span class='line'><span class="gd">-</span>
-</span><span class='line'><span class="gd">-  &lt;!-- include asides.html --&gt;</span>
-</span><span class='line'><span class="gd">-  {% include asides.html %}</span>
-</span><span class='line'><span class="gd">-  &lt;!-- /include asides.html --&gt;</span>
-</span><span class='line'><span class="gi">+  &lt;div class=&quot;sidebar&quot;&gt;</span>
-</span><span class='line'><span class="gi">+    {% if site.blog_index_asides.size %}</span>
-</span><span class='line'><span class="gi">+      {% include_array blog_index_asides %}</span>
-</span><span class='line'><span class="gi">+    {% else %}</span>
-</span><span class='line'><span class="gi">+      {% include_array default_asides %}</span>
-</span><span class='line'><span class="gi">+    {% endif %}</span>
-</span><span class='line'><span class="gi">+  &lt;/div&gt;</span>
-</span><span class='line'>
-</span><span class='line'> &lt;/div&gt;
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>source/_includes/article.html</h3>
-
-<p>デフォルトのままだと、permalinkを出すことができないので、&#8221;ReadMore&#8221; 的なものをそのままpermalinkへ</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-</pre></td><td class='code'><pre><code class='diff'><span class='line'><span class="gd">--- .themes/classic/source/_includes/article.html   2012-03-24 22:01:56.000000000 +0900</span>
-</span><span class='line'><span class="gi">+++ source/_includes/article.html    2012-03-24 22:11:02.000000000 +0900</span>
-</span><span class='line'><span class="gu">@@ -1,7 +1,7 @@</span>
-</span><span class='line'> {% unless page.no_header %}
-</span><span class='line'>   &lt;header&gt;
-</span><span class='line'>     {% if index %}
-</span><span class='line'><span class="gd">-      &lt;h1 class=&quot;entry-title&quot;&gt;&lt;a href=&quot;{{ root_url }}{{ post.url }}&quot;&gt;{% if site.titlecase %}{{ post.title | titlecase }}{% else %}{{ post.title }}{% endif %}&lt;/a&gt;&lt;/h1&gt;</span>
-</span><span class='line'><span class="gi">+      &lt;h1 class=&quot;entry-title&quot;&gt;{% if site.titlecase %}{{ post.title | titlecase }}{% else %}{{ post.title }}{% endif %}&lt;/h1&gt;</span>
-</span><span class='line'>     {% else %}
-</span><span class='line'>       &lt;h1 class=&quot;entry-title&quot;&gt;{% if site.titlecase %}{{ page.title | titlecase }}{% else %}{{ page.title }}{% endif %}&lt;/h1&gt;
-</span><span class='line'>     {% endif %}
-</span><span class='line'><span class="gu">@@ -18,11 +18,9 @@</span>
-</span><span class='line'> {% if index %}
-</span><span class='line'>   &lt;div class=&quot;entry-content&quot;&gt;{{ content | excerpt }}&lt;/div&gt;
-</span><span class='line'>   {% capture excerpted %}{{ content | has_excerpt }}{% endcapture %}
-</span><span class='line'><span class="gd">-  {% if excerpted == &#39;true&#39; %}</span>
-</span><span class='line'><span class="gd">-    &lt;footer&gt;</span>
-</span><span class='line'><span class="gd">-      &lt;a rel=&quot;full-article&quot; href=&quot;{{ root_url }}{{ post.url }}&quot;&gt;{{ site.excerpt_link }}&lt;/a&gt;</span>
-</span><span class='line'><span class="gd">-    &lt;/footer&gt;</span>
-</span><span class='line'><span class="gd">-  {% endif %}</span>
-</span><span class='line'><span class="gi">+  &lt;footer style=&quot;text-align: right&quot;&gt;</span>
-</span><span class='line'><span class="gi">+    &lt;a rel=&quot;full-article&quot; href=&quot;{{ root_url }}{{ post.url }}&quot;&gt;{{ site.excerpt_link }}&lt;/a&gt;</span>
-</span><span class='line'><span class="gi">+  &lt;/footer&gt;</span>
-</span><span class='line'> {% else %}
-</span><span class='line'> &lt;div class=&quot;entry-content&quot;&gt;{{ content }}&lt;/div&gt;
-</span><span class='line'> {% endif %}
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>source/_includes/custom/asides/about.html を変更</h3>
-
-<p>gravator から画像を持ってくるようにした。<br/>
-ここは、本来ならhashを計算してplugin化できるといいのかも。(その内やってみたい)</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='diff'><span class='line'><span class="gd">--- .themes/classic/source/_includes/custom/asides/about.html   2012-03-24 19:17:32.000000000 +0900</span>
-</span><span class='line'><span class="gi">+++ source/_includes/custom/asides/about.html    2012-03-24 23:19:29.000000000 +0900</span>
-</span><span class='line'><span class="gu">@@ -1,4 +1,9 @@</span>
-</span><span class='line'> &lt;section&gt;
-</span><span class='line'>   &lt;h1&gt;About Me&lt;/h1&gt;
-</span><span class='line'><span class="gd">-  &lt;p&gt;A little something about me.&lt;/p&gt;</span>
-</span><span class='line'><span class="gi">+  &lt;div class=&quot;avator&quot;&gt;</span>
-</span><span class='line'><span class="gi">+    &lt;a href=&quot;http://about.me/nowelium&quot;&gt;</span>
-</span><span class='line'><span class="gi">+      &lt;img src=&quot;http://www.gravatar.com/avatar/b6b88d1ee75665cf5a7553410e979a11.png?s=140&quot; height=&quot;64&quot; width=&quot;64&quot; /&gt;</span>
-</span><span class='line'><span class="gi">+      &lt;p&gt;Yusuke Hata&lt;/p&gt;</span>
-</span><span class='line'><span class="gi">+    &lt;/a&gt;</span>
-</span><span class='line'><span class="gi">+  &lt;/div&gt;</span>
-</span><span class='line'> &lt;/section&gt;
-</span><span class='line'>yusuke@yusu
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>その他</h3>
-
-<p>source/_includes/asides/*.html を少し変更したりしたかも。<br/>
-ログを残しつつやってたつもりが、試行錯誤のまま差分が行方不明になってしまったので、思い出したら書いていこうと思う。
-そんな感じ</p>
-</div>
-  
-  <footer style="text-align: right">
-    <a rel="full-article" href="/blog/2012/03/26/octopress-diff.html">permalink</a>
-  </footer>
-
-
-    </article>
-  
 
   <div class="pagination">
     
@@ -2761,11 +2491,15 @@ else区を書きたくない派(あるのか?)の一員としては、単純な�
 </section>
 <section>
   <h2>Tags</h2>
-  <span id="tag-cloud"><a href='/blog/categories/bitmap' style='font-size: 112.0%'>Bitmap(1)</a> <a href='/blog/categories/hello-world' style='font-size: 112.0%'>Hello world(1)</a> <a href='/blog/categories/io' style='font-size: 112.0%'>Io(1)</a> <a href='/blog/categories/io' style='font-size: 124.0%'>Io(2)</a> <a href='/blog/categories/javascript' style='font-size: 160.0%'>Javascript(5)</a> <a href='/blog/categories/nodejs' style='font-size: 112.0%'>Nodejs(1)</a> <a href='/blog/categories/octopress' style='font-size: 124.0%'>Octopress(2)</a> <a href='/blog/categories/perl' style='font-size: 160.0%'>Perl(5)</a> <a href='/blog/categories/python' style='font-size: 112.0%'>Python(1)</a> </span>
+  <span id="tag-cloud"><a href='/blog/categories/bitmap' style='font-size: 112.0%'>Bitmap(1)</a> <a href='/blog/categories/hello-world' style='font-size: 112.0%'>Hello world(1)</a> <a href='/blog/categories/io' style='font-size: 148.0%'>Io(4)</a> <a href='/blog/categories/javascript' style='font-size: 160.0%'>Javascript(5)</a> <a href='/blog/categories/nodejs' style='font-size: 112.0%'>Nodejs(1)</a> <a href='/blog/categories/octopress' style='font-size: 124.0%'>Octopress(2)</a> <a href='/blog/categories/perl' style='font-size: 160.0%'>Perl(5)</a> <a href='/blog/categories/python' style='font-size: 112.0%'>Python(1)</a> </span>
 </section>
 <section>
   <h2>Recent Posts</h2>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/04/14/io-nonblocking-timer.html">Io languageでタイマー</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2012/09/16/io-lang-yielding.html">Io Language で yielding</a>
@@ -2887,7 +2621,7 @@ else区を書きたくない派(あるのか?)の一員としては、単純な�
       <footer role="contentinfo">
 	<!-- include footer -->
 	<p>
-  Copyright &copy; 2012 - Yusuke Hata -
+  Copyright &copy; 2013 - Yusuke Hata -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
   <span class="credit">Theme <a href="https://github.com/kui/k-ui-octopress-theme">Octopress Theme for k-ui.jp</a></span>
 </p>
