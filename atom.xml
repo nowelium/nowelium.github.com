@@ -4,7 +4,7 @@
   <title><![CDATA[ハタさんのブログ(出張版)]]></title>
   <link href="http://nowelium.github.com/atom.xml" rel="self"/>
   <link href="http://nowelium.github.com/"/>
-  <updated>2013-04-14T21:23:04+09:00</updated>
+  <updated>2013-04-14T21:30:35+09:00</updated>
   <id>http://nowelium.github.com/</id>
   <author>
     <name><![CDATA[Yusuke Hata]]></name>
@@ -50,10 +50,11 @@
 
 
 <p>まぁ、なんとなく動くんだけど、<code>System sleep</code> や <code>wait</code> は全体がブロックされてしまう問題があり
-同時並行性に問題があった</p>
+同時並行性に問題があった<br/>
+(そもそも 0.01 sec で sleep してるあたりが問題すぎる)</p>
 
 <p>ということで、これをどうにかして解決したいなぁ。と3年ぶりに思い至り
-<code>Concurrency Thread</code> でどうにか出来るんじゃないか。ということで、 non-blocking な実装を考えてみた</p>
+Addon の <a href="http://iolanguage.org/scm/io/docs/reference/index.html#/Concurrency/Thread/Thread">Concurrency Thread</a> でどうにか出来るんじゃないか。ということで、 non-blocking な実装を考えてみた</p>
 
 <div><script src='https://gist.github.com/5382439.js?file='></script>
 <noscript><pre><code></code></pre></noscript></div>
